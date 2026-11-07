@@ -1,21 +1,175 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>İstanbul Kulüpler Turnuva Sistemi</title>
 <style>
-body{font-family:Arial;text-align:center;background:#f2f5fa;padding:20px}
-h1{color:#173b70}
-button{display:block;width:100%;padding:16px;margin:12px 0;background:#173b70;color:white;border:0;border-radius:8px;font-size:17px}
+body{font-family:Arial,sans-serif;background:#f1f5fb;margin:0;padding:16px;color:#172b4d}
+h1{text-align:center;color:#173b70;font-size:25px}
+h2{text-align:center;font-size:19px}
+button{background:#193d74;color:white;border:0;border-radius:8px;padding:14px;margin:6px 0;width:100%;font-size:16px}
+input,select{box-sizing:border-box;width:100%;padding:13px;margin:6px 0;border:1px solid #ccd5e0;border-radius:7px;font-size:16px}
+section{display:none;background:white;padding:15px;border-radius:12px;margin-top:15px}
+.card{background:#edf3fb;padding:12px;margin:8px 0;border-radius:8px;overflow-wrap:anywhere}
+small{color:#52657b}
 </style>
 </head>
 <body>
 <h1>İSTANBUL KULÜPLER</h1>
 <h2>Turnuva ve Kura Sistemi</h2>
-<button>Kulüp Başvurusu</button>
-<button>Sporcu Kayıtları</button>
-<button>Turnuva Yönetimi</button>
-<button>Otomatik 4'lü Kura</button>
+<nav>
+<button onclick="ac('kulup')">Kulüp Başvurusu</button>
+<button onclick="ac('sporcu')">Sporcu Kayıtları</button>
+<button onclick="ac('turnuva')">Turnuva Yönetimi</button>
+<button onclick="ac('kura')">Otomatik 4'lü Kura</button>
+</nav>
+
+<section id="kulup">
+<h2>Kulüp Başvurusu</h2>
+<input id="kulupAdi" placeholder="Kulüp adı">
+<input id="antrenor" placeholder="Antrenör adı soyadı">
+<input id="telefon" type="tel" placeholder="İletişim telefonu">
+<button onclick="kulupEkle()">Kulübü Kaydet</button>
+<div id="kulupListe"></div>
+</section>
+
+<section id="sporcu">
+<h2>Sporcu Kayıtları</h2>
+<select id="sporcuKulup"></select>
+<input id="sporcuAdi" placeholder="Sporcu adı soyadı">
+<input id="dogum" type="date">
+<select id="cinsiyet">
+<option value="Erkek">Erkek</option>
+<option value="Kadın">Kadın</option>
+</select>
+<select id="kategori">
+<option>Alt Minik</option>
+<option>Minik</option>
+<option>Yıldız</option>
+<option>Genç</option>
+<option>Büyük</option>
+</select>
+<input id="kilo" type="number" min="1" step="0.1" placeholder="Kilo (kg)">
+<button onclick="sporcuEkle()">Sporcuyu Kaydet</button>
+<div id="sporcuListe"></div>
+</section>
+
+<section id="turnuva">
+<h2>Turnuva Yönetimi</h2>
+<input id="turnuvaAdi" placeholder="Turnuva adı">
+<input id="turnuvaTarih" type="date">
+<button onclick="turnuvaKaydet()">Turnuvayı Kaydet</button>
+<div id="turnuvaListe"></div>
+</section>
+
+<section id="kura">
+<h2>Otomatik 4'lü Kura</h2>
+<p>Sporcular cinsiyet, yaş kategorisi ve kayıtlı kilolarına göre ayrılır.</p>
+<button onclick="kuraCek()">Kuraları Oluştur</button>
+<div id="kuraListe"></div>
+<button onclick="window.print()">Yazdır / PDF</button>
+</section>
+
+<script>
+const anahtar="istanbulTurnuvaDemo";
+let veri;
+try{
+veri=JSON.parse(localStorage.getItem(anahtar))||{};
+}catch(e){veri={}}
+veri.kulupler=veri.kulupler||[];
+veri.sporcular=veri.sporcular||[];
+veri.turnuvalar=veri.turnuvalar||[];
+
+function kaydet(){
+localStorage.setItem(anahtar,JSON.stringify(veri));
+listele();
+}
+function ac(id){
+document.querySelectorAll("section").forEach(x=>x.style.display="none");
+document.getElementById(id).style.display="block";
+listele();
+}
+function deger(id){
+return document.getElementById(id).value.trim();
+}
+function kulupEkle(){
+let ad=deger("kulupAdi");
+if(!ad||!deger("antrenor"))return alert("Kulüp ve antrenör bilgilerini girin.");
+if(veri.kulupler.some(x=>x.ad===ad))return alert("Kulüp zaten kayıtlı.");
+veri.kulupler.push({ad,antrenor:deger("antrenor"),telefon:deger("telefon")});
+kaydet();alert("Kulüp kaydedildi.");
+}
+function sporcuEkle(){
+if(!deger("sporcuKulup")||!deger("sporcuAdi")||!deger("dogum")||!deger("kilo"))return alert("Bütün sporcu bilgilerini doldurun.");
+veri.sporcular.push({
+kulup:deger("sporcuKulup"),
+ad:deger("sporcuAdi"),
+dogum:deger("dogum"),
+cinsiyet:deger("cinsiyet"),
+kategori:deger("kategori"),
+kilo:Number(deger("kilo"))
+});
+kaydet();alert("Sporcu kaydedildi.");
+}
+function turnuvaKaydet(){
+if(!deger("turnuvaAdi")||!deger("turnuvaTarih"))return alert("Turnuva bilgilerini girin.");
+veri.turnuvalar.push({ad:deger("turnuvaAdi"),tarih:deger("turnuvaTarih")});
+kaydet();alert("Turnuva kaydedildi.");
+}
+function listele(){
+const sec=document.getElementById("sporcuKulup");
+const eski=sec.value;
+sec.replaceChildren();
+veri.kulupler.forEach(k=>{
+const o=document.createElement("option");
+o.value=k.ad;o.textContent=k.ad;sec.appendChild(o);
+});
+sec.value=eski||sec.options[0]?.value||"";
+function goster(id,items,format){
+const el=document.getElementById(id);
+el.replaceChildren();
+items.forEach(x=>{
+const d=document.createElement("div");
+d.className="card";d.textContent=format(x);el.appendChild(d);
+});
+}
+goster("kulupListe",veri.kulupler,x=>x.ad+" — "+x.antrenor);
+goster("sporcuListe",veri.sporcular,x=>x.ad+" — "+x.kulup+" — "+x.kilo+" kg");
+goster("turnuvaListe",veri.turnuvalar,x=>x.ad+" — "+x.tarih);
+}
+function kuraCek(){
+const el=document.getElementById("kuraListe");
+el.replaceChildren();
+const gruplar={};
+veri.sporcular.forEach(s=>{
+const key=[s.cinsiyet,s.kategori,s.kilo].join("|");
+(gruplar[key]??=[]).push(s);
+});
+Object.entries(gruplar).forEach(([key,sporcular])=>{
+const karisik=[...sporcular];
+for(let i=karisik.length-1;i>0;i--){
+const j=Math.floor(Math.random()*(i+1));
+[karisik[i],karisik[j]]=[karisik[j],karisik[i]];
+}
+for(let i=0;i<karisik.length;i+=4){
+const kutu=document.createElement("div");
+kutu.className="card";
+const baslik=document.createElement("h3");
+baslik.textContent=key.replaceAll("|"," / ")+" — Grup "+(Math.floor(i/4)+1);
+kutu.appendChild(baslik);
+karisik.slice(i,i+4).forEach((s,n)=>{
+const p=document.createElement("p");
+p.textContent=(n+1)+". "+s.ad+" ("+s.kulup+")";
+kutu.appendChild(p);
+});
+el.appendChild(kutu);
+}
+});
+if(!veri.sporcular.length)el.textContent="Önce sporcu kaydedin.";
+}
+listele();
+</script>
 </body>
 </html>
