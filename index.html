@@ -29,14 +29,42 @@ small{color:#52657b}
   </button>
 </div>
 
+
 <section id="kulup">
-<h2>Kulüp Başvurusu</h2>
-<input id="kulupAdi" placeholder="Kulüp adı">
-<input id="antrenor" placeholder="Antrenör adı soyadı">
-<input id="telefon" type="tel" placeholder="İletişim telefonu">
-<button onclick="kulupEkle()">Kulübü Kaydet</button>
-<div id="kulupListe"></div>
+  <h2>🥋 Kulüp Paneli</h2>
+  <p>İstanbul Kulüpler Turnuva Sistemi</p>
+
+  <div class="card">
+    <h3>🏢 Kulüp Başvurusu</h3>
+    <input id="kulupAdi" placeholder="Kulüp Adı">
+    <input id="antrenor" placeholder="Antrenör Adı Soyadı">
+    <input id="telefon" type="tel"
+      placeholder="İletişim Telefonu">
+    <button onclick="kulupEkle()">
+      Kulüp Başvurusu Yap
+    </button>
+  </div>
+
+  <div class="card">
+    <h3>📋 Kulüp Listesi</h3>
+    <div id="kulupListe"></div>
+  </div>
+
+  <div class="card">
+    <h3>🥋 Sporcu Başvuruları</h3>
+    <button onclick="ac('sporcu')">
+      Sporcu Kaydı Yap
+    </button>
+  </div>
+
+  <div class="card">
+    <h3>🏆 Turnuvalar</h3>
+    <button onclick="ac('turnuva')">
+      Turnuvaları Gör
+    </button>
+  </div>
 </section>
+
 
 <section id="sporcu">
 <h2>Sporcu Kayıtları</h2>
