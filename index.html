@@ -72,6 +72,15 @@ small{color:#52657b}
 <button onclick="window.print()">Yazdır / PDF</button>
 </section>
 
+<button onclick="ac('yonetici')">Yönetici Paneli</button>
+
+<section id="yonetici">
+  <h2>Yönetici Paneli</h2>
+  <button onclick="tumSporculariSil()" style="background:#b91c1c">
+    Tüm Sporcuları Sil
+  </button>
+</section>
+
 <script>
 const anahtar="istanbulTurnuvaDemo";
 let veri;
@@ -86,7 +95,16 @@ function kaydet(){
 localStorage.setItem(anahtar,JSON.stringify(veri));
 listele();
 }
-function ac(id){
+ 
+function tumSporculariSil() {
+  if (!confirm("Bütün sporcular silinecek. Kulüpler kalacak. Emin misiniz?")) return;
+  veri.sporcular = [];
+  kaydet();
+  const kura = document.getElementById("kuraListe");
+  if (kura) kura.replaceChildren();
+  alert("Bütün sporcular silindi. Kulüpler korundu.");
+}
+  function ac(id){
 document.querySelectorAll("section").forEach(x=>x.style.display="none");
 document.getElementById(id).style.display="block";
 listele();
