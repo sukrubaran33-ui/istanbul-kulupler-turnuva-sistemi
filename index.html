@@ -77,11 +77,48 @@ small{color:#52657b}
 
 
 <section id="yonetici">
-  <h2>Yönetici Paneli</h2>
-  <button onclick="tumSporculariSil()" style="background:#b91c1c">
-    Tüm Sporcuları Sil
-  </button>
+  <h2>🔐 Yönetici Paneli</h2>
+  <p>İstanbul Kulüpler Turnuva Sistemi</p>
+
+  <div class="card">
+    <h3>🏆 Turnuva Yönetimi</h3>
+    <button onclick="ac('turnuva')">
+      Turnuva Oluştur / Yönet
+    </button>
+  </div>
+
+  <div class="card">
+    <h3>🏢 Kulüp Yönetimi</h3>
+    <button onclick="ac('kulup')">
+      Kulüp Başvurularını Gör
+    </button>
+    <div id="yoneticiKulupListe"></div>
+  </div>
+
+  <div class="card">
+    <h3>🥋 Sporcu Yönetimi</h3>
+    <button onclick="ac('sporcu')">
+      Sporcu Kayıtlarını Gör
+    </button>
+  </div>
+
+  <div class="card">
+    <h3>🎯 Otomatik Kura</h3>
+    <button onclick="ac('kura')">
+      Kura Panelini Aç
+    </button>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Yönetici İşlemleri</h3>
+    <button onclick="tumSporculariSil()"
+      style="background:#b91c1c">
+      Tüm Sporcuları Sil
+    </button>
+  </div>
 </section>
+
+
 
 <script>
 const anahtar="istanbulTurnuvaDemo";
