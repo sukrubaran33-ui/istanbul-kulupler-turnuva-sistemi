@@ -258,3 +258,30 @@ listele();
 </script>
 </body>
 </html>
+
+<button type="button" onclick="window.print()">
+  🖨️ A4 Kura Yazdır
+</button>
+
+<style>
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+  body {
+    background: white !important;
+  }
+  button, input, select {
+    display: none !important;
+  }
+  section {
+    box-shadow: none !important;
+  }
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+</style>
+  
