@@ -13,7 +13,13 @@ button{background:#193d74;color:white;border:0;border-radius:8px;padding:14px;ma
 input,select{box-sizing:border-box;width:100%;padding:13px;margin:6px 0;border:1px solid #ccd5e0;border-radius:7px;font-size:16px}
 section{display:none;background:white;padding:15px;border-radius:12px;margin-top:15px}
 .card{background:#edf3fb;padding:12px;margin:8px 0;border-radius:8px;overflow-wrap:anywhere}
-small{color:#52657b}
+small{color:#52657b} @media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  body > h1, body > h2, body > div, button { display: none !important; }
+  section { display: none !important; }
+  #kura { display: block !important; padding: 0; }
+  #kura .card { break-inside: avoid; page-break-inside: avoid; }
+}
 </style>
 </head>
 <body>
