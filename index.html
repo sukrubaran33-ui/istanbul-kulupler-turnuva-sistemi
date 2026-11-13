@@ -417,6 +417,65 @@ document.addEventListener("DOMContentLoaded", () => {
   panel.parentNode.insertBefore(buton, panel);
 });
 </script>
+  
+<div id="madalyaPaneli" class="card" style="display:none">
+  <h2>🏅 Madalya Sıralaması</h2>
+  <div id="madalyaListe"></div>
+</div>
+
+<script>
+function madalyaGoster() {
+  const panel = document.getElementById("madalyaPaneli");
+  const liste = document.getElementById("madalyaListe");
+  const maclar = document.getElementById("macPaneli");
+
+  if (!maclar) {
+    alert("Önce maçları oluşturun.");
+    return;
+  }
+
+  const gruplar = [...maclar.querySelectorAll(".card")];
+  const sonuc = {};
+
+  gruplar.forEach(grup => {
+    const metin = grup.innerText;
+    const eslesme = metin.match(/Şampiyon:\s*(.+)/);
+    if (!eslesme) return;
+
+    const sporcu = eslesme[1].trim();
+    const kulup = sporcu.match(/\(([^)]+)\)/);
+    const ad = kulup ? kulup[1] : "Bilinmeyen Kulüp";
+
+    if (!sonuc[ad]) sonuc[ad] = 0;
+    sonuc[ad]++;
+  });
+
+  liste.replaceChildren();
+
+  Object.entries(sonuc)
+    .sort((a,b) => b[1] - a[1])
+    .forEach(([kulup, altin], i) => {
+      const p = document.createElement("p");
+      p.textContent =
+        (i + 1) + ". " + kulup +
+        " — 🥇 " + altin;
+      liste.appendChild(p);
+    });
+
+  if (!liste.children.length) {
+    liste.textContent = "Henüz tamamlanan final yok.";
+  }
+
+  panel.style.display = "block";
+}
+
+const madalyaButon = document.createElement("button");
+madalyaButon.textContent = "🏅 Madalya Sıralamasını Göster";
+madalyaButon.onclick = madalyaGoster;
+document.getElementById("madalyaPaneli")
+  .before(madalyaButon);
+</script>
+
 
 </body> 
 </html>
