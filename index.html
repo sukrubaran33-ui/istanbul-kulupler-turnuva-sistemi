@@ -476,6 +476,29 @@ document.getElementById("madalyaPaneli")
   .before(madalyaButon);
 </script>
 
+<script>
+function tumMadalyalariGoster() {
+  const panel = document.getElementById("madalyaPaneli");
+  if (!panel) return;
+
+  const liste = panel.querySelector("#madalyaListesi");
+  if (!liste) {
+    alert("Madalya listesi bulunamadı.");
+    return;
+  }
+
+  // Mevcut maç sonuçlarını koruyarak
+  // madalya sıralamasını göster.
+  if (typeof madalyaGoster === "function") {
+    madalyaGoster();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Madalya sistemi hazır.");
+});
+</script>
+
 
 </body> 
 </html>
