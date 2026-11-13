@@ -322,5 +322,101 @@ function kuraYazdir() {
 }
 </script>
 
+<div id="macPaneli" class="card" style="display:none">
+  <h2>🥋 Yarı Final ve Final</h2>
+  <div id="macListesi"></div>
+</div>
+
+<script>
+function maclariOlustur() {
+  const gruplar = document.querySelectorAll("#kuraListe .card");
+  const panel = document.getElementById("macPaneli");
+  const liste = document.getElementById("macListesi");
+  liste.replaceChildren();
+
+  let sayac = 0;
+
+  gruplar.forEach((grup, index) => {
+    const sporcular = [...grup.querySelectorAll("p")]
+      .map(p => p.textContent.trim());
+
+    if (sporcular.length !== 4) return;
+    sayac++;
+
+    const kutu = document.createElement("div");
+    kutu.className = "card";
+
+    const baslik = document.createElement("h3");
+    baslik.textContent = "Grup " + (index + 1);
+    kutu.appendChild(baslik);
+
+    const kazananlar = [null, null];
+
+    function macOlustur(ad, adaylar, bitince) {
+      const alan = document.createElement("div");
+      const baslik = document.createElement("h4");
+      baslik.textContent = ad;
+      alan.appendChild(baslik);
+
+      adaylar.forEach(sporcu => {
+        const buton = document.createElement("button");
+        buton.textContent = sporcu;
+        buton.style.margin = "5px 0";
+        buton.onclick = () => bitince(sporcu);
+        alan.appendChild(buton);
+      });
+
+      return alan;
+    }
+
+    const finalAlani = document.createElement("div");
+    const sonuc = document.createElement("p");
+
+    function finalGuncelle() {
+      finalAlani.replaceChildren();
+      sonuc.textContent = "";
+
+      if (kazananlar.every(Boolean)) {
+        finalAlani.appendChild(macOlustur(
+          "🏆 Final", kazananlar,
+          kazanan => {
+            sonuc.textContent = "🥇 Şampiyon: " + kazanan;
+          }
+        ));
+        finalAlani.appendChild(sonuc);
+      }
+    }
+
+    [[0, 1], [2, 3]].forEach((eslesme, i) => {
+      kutu.appendChild(macOlustur(
+        "Yarı Final " + (i + 1),
+        eslesme.map(n => sporcular[n]),
+        kazanan => {
+          kazananlar[i] = kazanan;
+          finalGuncelle();
+        }
+      ));
+    });
+
+    kutu.appendChild(finalAlani);
+    liste.appendChild(kutu);
+  });
+
+  panel.style.display = "block";
+
+  if (!sayac) {
+    liste.textContent = "Önce 4 sporculu kura oluşturun.";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const panel = document.getElementById("macPaneli");
+  const buton = document.createElement("button");
+  buton.textContent = "🥋 Yarı Final / Final Oluştur";
+  buton.onclick = maclariOlustur;
+  panel.parentNode.insertBefore(buton, panel);
+});
+</script>
+
 </body> 
 </html>
