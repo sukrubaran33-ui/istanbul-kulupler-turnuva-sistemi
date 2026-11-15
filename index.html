@@ -540,7 +540,10 @@ function eslesmeliKuraYazdir() {
     return;
   }
 
-  const pencere = window.open("", "_blank");
+  
+const pencere = window.open("", "_blank");
+if (pencere) pencere.focus();
+
   if (!pencere) {
     alert("Açılır pencerelere izin verin.");
     return;
