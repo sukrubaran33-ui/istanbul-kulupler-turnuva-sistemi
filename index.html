@@ -634,11 +634,12 @@ if (pencere) pencere.focus();
     <body>${sayfalar}</body></html>
   `);
   
+
 pencere.document.close();
-pencere.onload = function() {
-  pencere.focus();
-  pencere.print();
-};
+pencere.focus();
+pencere.print();
+
+
 
  
 }
