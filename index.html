@@ -633,7 +633,14 @@ if (pencere) pencere.focus();
     </style></head>
     <body>${sayfalar}</body></html>
   `);
-  pencere.document.close();
+  
+pencere.document.close();
+pencere.onload = function() {
+  pencere.focus();
+  pencere.print();
+};
+
+ 
 }
 </script>
 
