@@ -636,8 +636,10 @@ if (pencere) pencere.focus();
   
 
 pencere.document.close();
-pencere.focus();
-pencere.print();
+pencere.onload = function() {
+  pencere.focus();
+  pencere.print();
+};
 
 
 
