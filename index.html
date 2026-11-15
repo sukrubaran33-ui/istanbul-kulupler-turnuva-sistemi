@@ -107,7 +107,8 @@ small{color:#52657b} @media print {
 <p>Sporcular cinsiyet, yaş kategorisi ve kayıtlı kilolarına göre ayrılır.</p>
 <button onclick="kuraCek()">Kuraları Oluştur</button>
 <div id="kuraListe"></div>
-<button onclick="kuraYazdir()">Yazdır / PDF</button>
+<button onclick="kuraYazdir()">Yazdır / PDF</button> 
+  <button onclick="eslesmeliKuraYazdir()">🥋 A4 Eşleşmeli Kura</button>
 </section>
 
 
@@ -528,6 +529,108 @@ function kuraYazdir() {
   `);
   pencere.document.close();
   pencere.print();
+}
+</script>
+
+<script>
+function eslesmeliKuraYazdir() {
+  const liste = document.getElementById("kuraListe");
+  if (!liste || !liste.children.length) {
+    alert("Önce kuraları oluşturun.");
+    return;
+  }
+
+  const pencere = window.open("", "_blank");
+  if (!pencere) {
+    alert("Açılır pencerelere izin verin.");
+    return;
+  }
+
+  const temizle = (s) => String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+  let sayfalar = "";
+
+  [...liste.children].forEach((grup, index) => {
+    const baslik = grup.querySelector("h3,h4,h2");
+    const sporcular = [...grup.querySelectorAll("li")]
+      .map(x => x.textContent.trim());
+
+    if (!sporcular.length) return;
+
+    const adlar = Array.from(
+      {length: 4},
+      (_, i) => temizle(sporcular[i] || "BAY / Boş")
+    );
+
+    sayfalar += `
+      <section class="sayfa">
+        <h2>İSTANBUL KULÜPLER TURNUVA SİSTEMİ</h2>
+        <h3>${temizle(baslik?.textContent || "Grup " + (index + 1))}</h3>
+        <div class="eslesme">
+          <div class="sporcular">
+            <div>${adlar[0]}</div>
+            <div>${adlar[1]}</div>
+            <div>${adlar[2]}</div>
+            <div>${adlar[3]}</div>
+          </div>
+          <div class="maclar">
+            <div>Yarı Final 1<br>__________</div>
+            <div>Yarı Final 2<br>__________</div>
+          </div>
+          <div class="final">
+            <div>FİNAL<br>__________</div>
+          </div>
+        </div>
+        <h3>ÜÇÜNCÜLÜK MAÇI</h3>
+        <p>Yarı final kaybedenleri:</p>
+        <p>________________ / ________________</p>
+        <p>Şampiyon: ________________________</p>
+      </section>`;
+  });
+
+  if (!sayfalar) {
+    pencere.close();
+    alert("Kura gruplarındaki sporcular okunamadı.");
+    return;
+  }
+
+  pencere.document.write(`
+    <!DOCTYPE html>
+    <html lang="tr"><head>
+    <meta charset="UTF-8">
+    <style>
+      @page { size: A4 portrait; margin: 12mm; }
+      body { font-family: Arial, sans-serif; }
+      .sayfa { break-after: page; padding: 10px; }
+      .sayfa:last-child { break-after: auto; }
+      h2,h3 { text-align: center; }
+      .eslesme {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 45px 0;
+      }
+      .sporcular,.maclar,.final {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        min-height: 300px;
+      }
+      .sporcular div,.maclar div,.final div {
+        border: 1px solid #333;
+        padding: 10px 5px;
+        font-size: 11px;
+        overflow-wrap: anywhere;
+      }
+    </style></head>
+    <body>${sayfalar}</body></html>
+  `);
+  pencere.document.close();
 }
 </script>
 
