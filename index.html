@@ -107,7 +107,7 @@ small{color:#52657b} @media print {
 <p>Sporcular cinsiyet, yaş kategorisi ve kayıtlı kilolarına göre ayrılır.</p>
 <button onclick="kuraCek()">Kuraları Oluştur</button>
 <div id="kuraListe"></div>
-<button onclick="window.print()">Yazdır / PDF</button>
+<button onclick=" <button onclick="kuraYazdir()">Yazdır / PDF</button> ">Yazdır / PDF</button>
 </section>
 
 
@@ -499,6 +499,37 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+
+<script>
+function kuraYazdir() {
+  const bolum = document.querySelector(
+    '#kuraListe'
+  );
+
+  if (!bolum) {
+    alert("Kura listesi bulunamadı.");
+    return;
+  }
+
+  const pencere = window.open("", "_blank");
+  if (!pencere) {
+    alert("Açılır pencerelere izin verin.");
+    return;
+  }
+
+  pencere.document.write(`
+    <html><head><meta charset="UTF-8">
+    <style>
+      @page { size: A4; margin: 12mm; }
+      body { font-family: Arial; }
+      button { display: none; }
+    </style></head>
+    <body>${bolum.outerHTML}</body></html>
+  `);
+  pencere.document.close();
+  pencere.print();
+}
+</script>
 
 </body> 
 </html>
