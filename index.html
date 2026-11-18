@@ -277,7 +277,7 @@ async function syncApprovedAthletes(){
    pending.push({key,a,c});
   }
   if(!pending.length){alert('Aktarılacak yeni onaylı sporcu yok.');return}
-  if(db.draws.length&&!confirm(pending.length+' yeni sporcu aktarılacak. Mevcut kuralar ve sonuçlar sıfırlanacak. Önce yedek alın. Devam edilsin mi?'))return;
+  // Onaylı sporcuları içeri alırken mevcut kuralara veya sonuçlara asla dokunma.
   let added=0;
   for(const x of pending){
    let club=db.clubs.find(c=>c.online_user_id===x.c.user_id);
@@ -290,8 +290,8 @@ async function syncApprovedAthletes(){
     age:a.age_group,gender:a.gender,weight:a.weight,license:a.license||''});
    added++;
   }
-  if(db.draws.length)db.draws=[];
-  save();render();alert(added+' onaylı sporcu aktarıldı. Şimdi otomatik kura çekebilirsiniz.');
+  // Eski kuralar ve maç sonuçları korunur. Yeni sporcular sonraki kuralarda kullanılabilir.
+  save();render();alert(added+' onaylı sporcu aktarıldı. Mevcut kuralar ve sonuçlar korundu. Yeni sporcular için yeni kura oluşturabilirsiniz.');
  }catch(err){console.error(err);alert('Online aktarım yapılamadı: '+(err.message||err))}
 }
 
