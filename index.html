@@ -647,5 +647,77 @@ pencere.onload = function() {
 }
 </script>
 
+/* Aşağıdaki kodu mevcut son </body> etiketinden hemen önce ekleyin. */
+<script>
+function kuraYazdir() {
+  const liste = document.getElementById('kuraListe');
+  if (!liste || !liste.querySelector('.card')) {
+    alert('Önce kuraları oluşturun.'); return;
+  }
+  document.body.classList.add('kura-yazdir');
+  window.print();
+}
+function eslesmeliKuraYazdir() {
+  const gruplar = [...document.querySelectorAll('#kuraListe > .card')];
+  if (!gruplar.length) { alert('Önce kuraları oluşturun.'); return; }
+  let alan = document.getElementById('eslesmeYazdirAlani');
+  if (!alan) {
+    alan = document.createElement('div');
+    alan.id = 'eslesmeYazdirAlani';
+    document.body.appendChild(alan);
+  }
+  alan.replaceChildren();
+  gruplar.forEach((grup, i) => {
+    const sayfa = document.createElement('div');
+    sayfa.className = 'eslesme-sayfa';
+    const baslik = document.createElement('h2');
+    baslik.textContent = 'İSTANBUL KULÜPLER TURNUVA SİSTEMİ';
+    sayfa.appendChild(baslik);
+    const alt = document.createElement('h3');
+    alt.textContent = grup.querySelector('h3')?.textContent || 'Grup ' + (i+1);
+    sayfa.appendChild(alt);
+    const isimler = [...grup.querySelectorAll('p')].map(p => p.textContent.trim());
+    const tablo = document.createElement('table');
+    tablo.className = 'eslesme-tablo';
+    const baslikSatiri = tablo.insertRow();
+    ['Sporcular','Yarı Final','Final'].forEach(t => {
+      const th = document.createElement('th'); th.textContent = t; baslikSatiri.appendChild(th);
+    });
+    for (let n=0;n<4;n++) {
+      const satir = tablo.insertRow();
+      const sporcu = satir.insertCell();
+      sporcu.textContent = isimler[n] || 'BAY / Boş';
+      const yari = satir.insertCell();
+      yari.textContent = n===0 ? 'Yarı Final 1: __________' : n===2 ? 'Yarı Final 2: __________' : '';
+      const final = satir.insertCell();
+      final.textContent = n===1 ? 'Final: ______________' : '';
+    }
+    sayfa.appendChild(tablo);
+    const not = document.createElement('p');
+    not.textContent = 'Üçüncülük maçı: ____________________    Şampiyon: ____________________';
+    sayfa.appendChild(not);
+    alan.appendChild(sayfa);
+  });
+  document.body.classList.add('eslesme-yazdir');
+  window.print();
+}
+window.addEventListener('afterprint', () => {
+  document.body.classList.remove('kura-yazdir','eslesme-yazdir');
+});
+</script>
+<style>
+#eslesmeYazdirAlani { display:none; }
+@media print {
+  body.kura-yazdir > *, body.eslesme-yazdir > * { display:none !important; }
+  body.kura-yazdir #kura { display:block !important; }
+  body.kura-yazdir #kuraListe { display:block !important; }
+  body.kura-yazdir #kura button { display:none !important; }
+  body.eslesme-yazdir #eslesmeYazdirAlani { display:block !important; }
+  .eslesme-sayfa { break-after:page; page-break-after:always; }
+  .eslesme-sayfa:last-child { break-after:auto; page-break-after:auto; }
+  .eslesme-tablo { width:100%; border-collapse:collapse; margin:25px 0; }
+  .eslesme-tablo td,.eslesme-tablo th { border:1px solid #222; padding:12px 5px; font-size:11px; }
+}
+</style>
 </body> 
 </html>
