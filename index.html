@@ -5,8 +5,8 @@
 #printBracketArea{display:none}
 @media print{
  body.print-bracket #print-area{display:none!important}
- body.print-bracket #printBracketArea{display:block!important} body.print-bracket #print-area{display:none!important}
- body.print-list #print-area{display:block!important} body.print-list #print-area .card{display:block!important}
+ body.print-bracket #printBracketArea{display:block!important}
+ body.print-list #print-area{display:block!important}
  body.print-list #printBracketArea{display:none!important}
  #printBracketArea .sheet{break-after:page;page-break-after:always;break-inside:avoid;padding:4mm 0}
  #printBracketArea .sheet:last-child{break-after:auto;page-break-after:auto}
@@ -17,6 +17,37 @@
  #printBracketArea .draw-table th{background:#eee!important}
  #printBracketArea .foot{margin-top:12mm;font-size:12px}
 }
+
+/* Yazdırma önizlemesi: telefonlarda boşta kalan window.print yerine görünür sayfa */
+#printPreview{display:none;position:fixed;inset:0;z-index:1000;background:#edf1f6;overflow:auto;padding:14px}
+#printPreview.open{display:block}
+#printPreview .print-tools{max-width:940px;margin:0 auto 14px;background:#fff;border-radius:12px;padding:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#printPreview .print-tools button{font-size:14px}
+#printPreview .print-help{font-size:13px;color:#4b5870;flex-basis:100%;margin:4px 0 0}
+#printPreview .pages{max-width:940px;margin:0 auto}
+#printPreview .page{background:#fff;color:#111;border:1px solid #d5dbe5;padding:16mm 12mm;margin:0 auto 14px;min-height:250mm;box-shadow:0 2px 8px #0001;break-after:page;page-break-after:always}
+#printPreview .page:last-child{break-after:auto;page-break-after:auto}
+#printPreview h2{text-align:center;font-size:19px;margin:0 0 6px}
+#printPreview .sub{text-align:center;font-size:13px;margin:0 0 18px;color:#444}
+#printPreview table{min-width:0;width:100%;border-collapse:collapse;table-layout:fixed}
+#printPreview th,#printPreview td{border:1px solid #888;padding:8px 5px;font-size:12px;overflow-wrap:anywhere;vertical-align:middle}
+#printPreview th{background:#f0f2f5}
+#printPreview .draw-row{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:10px;min-height:220px}
+#printPreview .draw-col{display:flex;flex-direction:column;gap:12px}
+#printPreview .draw-col .slot{border:1px solid #64748b;border-left:4px solid #bd8621;padding:10px 6px;min-height:64px;font-size:12px;overflow-wrap:anywhere}
+#printPreview .draw-col .slot strong{display:block;font-size:11px;margin-bottom:6px;color:#374151}
+#printPreview .draw-col .slot + .slot{margin-top:8px}
+#printPreview .medal-line{margin-top:20px;padding-top:10px;border-top:1px solid #bbb;font-size:12px;line-height:1.8}
+@page{size:A4 portrait;margin:10mm}
+@media print{
+  body{background:white!important}
+  body > header,body > main{display:none!important}
+  #printPreview,#printPreview.open{position:static!important;display:block!important;inset:auto!important;overflow:visible!important;padding:0!important;background:white!important}
+  #printPreview .print-tools{display:none!important}
+  #printPreview .pages{max-width:none!important}
+  #printPreview .page{min-height:auto!important;border:0!important;box-shadow:none!important;padding:3mm 0!important;margin:0!important}
+  #printPreview .draw-row{min-height:200px}
+}
 </style></head><body><header><div class="wrap"><h1>🏆 İSTANBUL KULÜPLER SİSTEMİ</h1><p>Taekwondo • Sporcu Başvurusu • Otomatik Kura • Maç Sonuçları</p></div></header><main class="wrap"><nav class="tabs no-print" id="tabs"></nav><div id="home" class="panel active"><div class="grid" id="stats"></div><div class="card"><h2>Turnuva bilgileri</h2><div class="grid"><div><label>Turnuva adı</label><input id="tname" placeholder="İstanbul Kulüpler Turnuvası"></div><div><label>Turnuva tarihi</label><input type="date" id="tdate"></div><div><label>Turnuva yeri</label><input id="tplace" placeholder="İstanbul"></div></div><div class="actions"><button onclick="saveTournament()">Turnuvayı kaydet</button><button class="secondary" onclick="exportData()">Verileri yedekle (JSON)</button><label style="margin:0"><input type="file" id="import" accept="application/json" style="max-width:220px" onchange="importData(event)">Yedeği geri yükle</label></div><p class="note">Bu sürüm verileri kullandığınız tarayıcıda saklar. Tarayıcı verileri silinirse kayıtlar kaybolabilir; düzenli yedek alın. Kulüplerin farklı cihazlardan ortak kayıt yapması henüz desteklenmez.</p></div></div>
 <section id="clubs" class="panel"><div class="card"><h2>Kulüp kaydı</h2><form id="clubForm"><div class="grid"><div><label>Kulüp adı</label><input id="cname" required></div><div><label>Antrenör</label><input id="ccoach" required></div><div><label>Telefon</label><input id="cphone" type="tel"></div><div><label>İl / ilçe</label><input id="ccity" placeholder="İstanbul / Fatih"></div></div><div class="actions"><button>Kulüp ekle</button></div></form></div><div class="card"><h2>Kulüpler</h2><div class="tablewrap" id="clubList"></div></div></section>
 <section id="athletes" class="panel"><div class="card"><h2>Sporcu başvurusu</h2><form id="athleteForm"><div class="grid"><div><label>Ad soyad</label><input id="aname" required></div><div><label>Doğum tarihi</label><input type="date" id="abirth" required></div><div><label>Cinsiyet</label><select id="agender"><option>Erkek</option><option>Bayan</option></select></div><div><label>Yaş grubu</label><select id="aage"></select></div><div><label>Kilo kategorisi</label><select id="aweight"></select></div><div><label>Kulüp</label><select id="aclub" required></select></div><div><label>Lisans numarası (isteğe bağlı)</label><input id="alicense"></div></div><div class="actions"><button id="athleteSubmitButton">Başvuruyu kaydet</button><button type="button" class="secondary hide" id="cancelAthleteEdit" onclick="cancelEditAthlete()">Düzenlemeyi iptal et</button></div></form><p class="muted">Yaş ve kilo seçenekleri başlangıç şablonudur. Turnuvanın resmî talimatına göre kategorileri kontrol edin.</p></div><div class="card"><h2>Sporcu listesi</h2><input id="asearch" placeholder="Sporcu ara..." oninput="render()"><div class="tablewrap" id="athleteList"></div></div></section>
@@ -24,7 +55,7 @@
 <section id="draws" class="panel"><div class="card"><h2>Otomatik kura</h2><p>Her kura en fazla 4 sporcudan oluşur. Sporcular yaş grubu, cinsiyet ve kiloya göre ayrılır. Aynı kulüp sporcuları mümkün olduğunca ayrı gruplara dağıtılır.</p><div class="actions"><button onclick="makeDraws()">🎲 Otomatik kura çek</button><button class="secondary" onclick="show('print-area')">Kura listelerini görüntüle</button></div><p class="note">Yeni kura çekmek mevcut maç sonuçlarını siler. İşlemden önce onay alınır.</p></div><div id="drawPreview"></div></section>
 <section id="results" class="panel"><div class="card"><h2>Maç sonuçları</h2><p class="muted">Her eşleşmede kazananı seçin. Final eşleşmesi otomatik oluşur.</p><div id="resultList"></div></div></section>
 <section id="medals" class="panel"><div class="card"><h2>🏅 Madalya sıralaması</h2><div class="tablewrap" id="medalList"></div></div></section>
-<section id="print-area" class="panel"><div class="card"><h2>Yazdırılabilir A4 kura listeleri</h2><div class="actions no-print"><button onclick="printDrawList()">🖨️ A4 liste / PDF</button><button onclick="printBracket()">🥋 A4 eşleşmeli çizelge / PDF</button></div><div id="printList"></div></div></section><div id="printBracketArea"></div></main>
+<section id="print-area" class="panel"><div class="card"><h2>Yazdırılabilir A4 kura listeleri</h2><div class="actions no-print"><button onclick="showPrintPreview('list')">🖨️ A4 liste / PDF</button><button onclick="showPrintPreview('bracket')">🥋 A4 eşleşmeli çizelge / PDF</button></div><div id="printList"></div></div></section><div id="printBracketArea"></div></main><section id="printPreview" aria-label="A4 yazdırma önizlemesi"><div class="print-tools"><button type="button" onclick="closePrintPreview()" class="secondary">← Sisteme dön</button><button type="button" onclick="window.print()">🖨️ Yazdır / PDF kaydet</button><button type="button" onclick="downloadPrintHTML()" class="secondary">📄 A4 dosyasını indir</button><p class="print-help">Yazdırma penceresi açılmazsa tarayıcının menüsünden Paylaş → Yazdır veya Yazdır seçeneğini kullanın. Yazdır menüsünden “PDF olarak kaydet” seçebilirsiniz. “A4 dosyasını indir” seçeneği de yedek çıktı sağlar.</p></div><div class="pages" id="previewPages"></div></section>
 <script>
 const ages=['Alt Minik','Minik','Yıldız','Genç','Ümit','Büyük'];const base={
 'Minik|Erkek':['30','33','36','40','45','50','57','+57'],'Minik|Bayan':['27','30','33','36','40','45','50','57','+57'],
@@ -84,35 +115,53 @@ function medals(d){let a=d.ids;if(a.length<2||!d.final)return null;let b=bouts(d
 function render(){let t=db.tournament;$('tname').value=t.name||'';$('tdate').value=t.date||'';$('tplace').value=t.place||'';options('aclub',db.clubs.map(c=>c.id));$('aclub').innerHTML=db.clubs.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');$('stats').innerHTML=[['Kulüp',db.clubs.length],['Sporcu',db.athletes.length],['Kura',db.draws.length],['Tamamlanan kura',db.draws.filter(d=>d.final).length]].map(([a,b])=>`<div class="card"><div class="stat">${b}</div><b>${a}</b></div>`).join('');$('clubList').innerHTML='<table><tr><th>Kulüp</th><th>Antrenör</th><th>İlçe</th><th>Sporcu</th></tr>'+db.clubs.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.coach)}</td><td>${esc(c.city)}</td><td>${db.athletes.filter(a=>a.club===c.id).length}</td></tr>`).join('')+'</table>';let q=$('asearch').value.toLocaleLowerCase('tr');$('athleteList').innerHTML='<table><tr><th>Ad soyad</th><th>Kulüp</th><th>Kategori</th><th>Kilo</th><th>İşlem</th></tr>'+db.athletes.filter(a=>a.name.toLocaleLowerCase('tr').includes(q)).map(a=>`<tr><td>${esc(a.name)}</td><td>${esc(clubName(a.club))}</td><td>${esc(a.age)} / ${esc(a.gender)}</td><td>${esc(a.weight)} kg</td><td><button class="secondary" onclick="editAthlete('${a.id}')">Düzenle</button> <button class="danger" onclick="removeAthlete('${a.id}')">Sil</button></td></tr>`).join('')+'</table>';
 let html=db.draws.map((d,i)=>{let bs=bouts(d),m=medals(d);return `<div class="bracket"><h3>Kura ${d.number} — ${esc(d.key.replaceAll('|',' / '))} kg</h3>${d.ids.map(x=>`<div>${athleteName(x)} <small>(${esc(clubName(athlete(x)?.club))})</small></div>`).join('')}${d.ids.length===1?'<p class="pill">Rakip bekliyor</p>':''}${bs.map(b=>`<div class="match"><b>${b.label}</b><div>${b.players.map(x=>athleteName(x)).join(' — ')}${b.players.length===1?' (rakip bekleniyor)':''}</div>${b.players.length===2?`<div class="actions no-print">${b.players.map(x=>`<button class="${(b.key==='final'?d.final:d.semi[b.key])===x?'gold':'secondary'}" onclick="setWinner(${i},'${b.key}','${x}')">${athleteName(x)} kazandı</button>`).join('')}</div>`:''}</div>`).join('')}${m?`<p><b>🥇 ${athleteName(m.gold)}　🥈 ${athleteName(m.silver)}　🥉 ${m.bronze.map(athleteName).join(' / ')}</b></p>`:''}</div>`}).join('');$('drawPreview').innerHTML=html||'<div class="card">Henüz kura oluşturulmadı.</div>';$('resultList').innerHTML=html||'Önce kura çekin.';$('printList').innerHTML=`<h2>${esc(t.name)}</h2><p>${esc(t.date)} — ${esc(t.place)}</p>`+html;let scores={};for(let d of db.draws){let m=medals(d);if(!m)continue;for(let [type,ids] of [['gold',[m.gold]],['silver',[m.silver]],['bronze',m.bronze]])for(let aid of ids){let c=athlete(aid)?.club;if(!c)continue;(scores[c]??={gold:0,silver:0,bronze:0})[type]++}}$('medalList').innerHTML='<table><tr><th>Kulüp</th><th>🥇</th><th>🥈</th><th>🥉</th></tr>'+Object.entries(scores).sort((a,b)=>b[1].gold-a[1].gold||b[1].silver-a[1].silver||b[1].bronze-a[1].bronze).map(([c,s])=>`<tr><td>${esc(clubName(c))}</td><td>${s.gold}</td><td>${s.silver}</td><td>${s.bronze}</td></tr>`).join('')+'</table>'}
 function exportData(){let b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download='istanbul-kulupler-yedek.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.clubs)||!Array.isArray(x.athletes)||!Array.isArray(x.draws))throw Error();if(!confirm('Mevcut kayıtlar yedek dosyasıyla değiştirilsin mi?'))return;db=x;save();render();alert('Yedek yüklendi')}catch{alert('Geçersiz yedek dosyası')}};r.readAsText(f)}
-// Mobil tarayıcılarda açılır pencere yerine doğrudan yazdırma.
-function printDrawList(){
- if(!db.draws.length){alert('Önce kura oluşturun.');return}
- document.body.classList.remove('print-bracket');
- document.body.classList.add('print-list');
- window.print();
+// A4 çıktıları önce ayrı ve görünür bir önizleme olarak oluşturulur.
+// Mobil tarayıcının yazdırma API'si desteklenmese de çıktı ekranda kalır.
+let printPreviewKind='list';
+function printInfo(d){
+ const label='Kura '+d.number+' — '+d.key.replaceAll('|',' / ')+' kg';
+ const title=esc(db.tournament.name||'İstanbul Kulüpler Turnuvası');
+ const info=esc([db.tournament.date,db.tournament.place].filter(Boolean).join(' — '));
+ return `<h2>${title}</h2><p class="sub">${info}<br>${esc(label)}</p>`;
 }
-function printBracket(){
- if(!db.draws.length){alert('Önce kura oluşturun.');return}
- const area=$('printBracketArea');area.replaceChildren();
- for(const d of db.draws){
-  const sheet=document.createElement('article');sheet.className='sheet';
-  const h2=document.createElement('h2');h2.textContent=db.tournament.name||'İstanbul Kulüpler Turnuvası';sheet.appendChild(h2);
-  const h3=document.createElement('h3');h3.textContent='Kura '+d.number+' — '+d.key.replaceAll('|',' / ')+' kg';sheet.appendChild(h3);
-  const table=document.createElement('table');table.className='draw-table';
-  const header=table.insertRow();for(const name of ['Sporcu / Kulüp','Yarı Final','Final']){const th=document.createElement('th');th.textContent=name;header.appendChild(th)}
-  for(let i=0;i<4;i++){
-   const tr=table.insertRow();const a=athlete(d.ids[i]);
-   const td=tr.insertCell();td.textContent=a?a.name+' ('+clubName(a.club)+')':'BAY / Boş';
-   const semi=tr.insertCell();semi.textContent=i===0?'1. Yarı final: __________':i===2?'2. Yarı final: __________':'';
-   const fin=tr.insertCell();fin.textContent=i===1?'Final: ______________':'';
-  }
-  sheet.appendChild(table);
-  const foot=document.createElement('p');foot.className='foot';foot.textContent='Şampiyon: ____________________   İkinci: ____________________   Üçüncü: ____________________';sheet.appendChild(foot);
-  area.appendChild(sheet);
- }
- document.body.classList.remove('print-list');document.body.classList.add('print-bracket');
- window.print();
+function listPrintPage(d){
+ const rows=d.ids.map((aid,i)=>{const a=athlete(aid);return `<tr><td>${i+1}</td><td>${athleteName(aid)}</td><td>${esc(clubName(a?.club))}</td><td>${esc(a?.weight||'')} kg</td></tr>`}).join('');
+ const m=medals(d);
+ const summary=m?`<div class="medal-line">🥇 ${athleteName(m.gold)}　🥈 ${athleteName(m.silver)}<br>🥉 ${m.bronze.map(athleteName).join(' / ')}</div>`:'';
+ return `<article class="page">${printInfo(d)}<table><thead><tr><th style="width:10%">No</th><th>Sporcu</th><th>Kulüp</th><th style="width:15%">Kilo</th></tr></thead><tbody>${rows}</tbody></table>${summary}</article>`;
 }
-window.addEventListener('afterprint',()=>document.body.classList.remove('print-list','print-bracket'));
+function bracketPrintPage(d){
+ const ids=d.ids, bs=bouts(d), m=medals(d);
+ const semi=bs.filter(b=>b.key!=='final');
+ const fin=bs.find(b=>b.key==='final');
+ const slot=(label,body)=>`<div class="slot"><strong>${label}</strong>${body}</div>`;
+ const person=aid=>aid?athleteName(aid):'—';
+ const entries=ids.map((aid,i)=>slot('Sporcu '+(i+1),person(aid)+'<div style="font-size:10px;color:#444;margin-top:4px">'+esc(clubName(athlete(aid)?.club))+'</div>')).join('');
+ const semiBoxes=semi.length?semi.map(b=>slot(b.label,b.players.map(person).join(' / ')+'<div style="margin-top:7px"><b>Kazanan:</b> '+person(d.semi[b.key])+'</div>')).join(''):slot('Yarı final','Bu kurada yarı final yok');
+ const finBox=slot('Final',fin?fin.players.map(person).join(' / '):'—')+slot('Şampiyon',person(d.final));
+ const result=m?`🥇 ${person(m.gold)}　🥈 ${person(m.silver)}<br>🥉 ${m.bronze.map(person).join(' / ')}`:'Şampiyon: __________________　 İkinci: __________________';
+ return `<article class="page">${printInfo(d)}<div class="draw-row"><div class="draw-col">${entries}</div><div class="draw-col">${semiBoxes}</div><div class="draw-col">${finBox}</div></div><div class="medal-line">${result}</div></article>`;
+}
+function showPrintPreview(kind){
+ if(!db.draws.length){alert('Önce kura oluşturun.');return}
+ printPreviewKind=kind;
+ $('previewPages').innerHTML=db.draws.map(kind==='bracket'?bracketPrintPage:listPrintPage).join('');
+ $('printPreview').classList.add('open');
+ document.body.style.overflow='hidden';
+ $('printPreview').scrollTop=0;
+}
+function closePrintPreview(){
+ $('printPreview').classList.remove('open');
+ document.body.style.overflow='';
+}
+function downloadPrintHTML(){
+ const pages=$('previewPages').innerHTML;
+ const styles=Array.from(document.querySelectorAll('style')).map(x=>x.textContent).join('\n');
+ // Bağımsız dosya: A4 sayfası ve yazdırma düğmesi (tarayıcıda çevrimdışı da açılabilir).
+ const html=`<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>A4 Kura ${printPreviewKind==='bracket'?'Çizelgesi':'Listesi'}</title><style>${styles}body{background:#edf1f6!important}#printPreview{position:static!important;display:block!important;overflow:visible!important;padding:12px!important}#printPreview .print-tools{display:flex!important}@media print{body{background:#fff!important}#printPreview .print-tools{display:none!important}}</style></head><body><section id="printPreview" class="open"><div class="print-tools"><button onclick="window.print()">🖨️ Yazdır / PDF kaydet</button><p class="print-help">Açılmazsa tarayıcı menüsünden Yazdır seçin.</p></div><div class="pages">${pages}</div></section></body></html>`;
+ const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));
+ const link=document.createElement('a');link.href=url;link.download='istanbul-kura-'+printPreviewKind+'-A4.html';document.body.appendChild(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
 weightOptions();categoryEdit();render();show('home');
 </script></body></html>
