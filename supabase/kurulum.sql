@@ -27,7 +27,7 @@ create index if not exists athlete_applications_user_idx on public.athlete_appli
 create index if not exists athlete_applications_status_idx on public.athlete_applications(status);
 create or replace function public.is_tournament_admin()
 returns boolean language sql stable security definer set search_path=''
-as $select exists(select 1 from public.club_profiles where user_id=(select auth.uid()) and role='admin' and active=true)$;
+as $admincheck$select exists(select 1 from public.club_profiles where user_id=(select auth.uid()) and role='admin' and active=true)$admincheck$;
 revoke all on function public.is_tournament_admin() from public;
 grant execute on function public.is_tournament_admin() to authenticated;
 alter table public.club_profiles enable row level security;
