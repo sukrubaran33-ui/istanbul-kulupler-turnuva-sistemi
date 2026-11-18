@@ -7,7 +7,29 @@
 <header><div><h1>🥋 Online Kulüp ve Sporcu Başvurusu</h1><p>İstanbul Kulüpler Turnuva Sistemi</p><a href="index.html">← Turnuva ana sayfasına dön</a></div></header>
 <main>
 <div class="card"><strong>Durum:</strong> <span id="state">Bağlantı kontrol ediliyor…</span><p id="message" class="hint"></p></div>
-<section id="auth" class="card"><h2>Kulüp hesabı</h2><p class="hint">Kulüp yetkilisi e-posta ve şifresiyle hesap oluşturur. Yönetici kulübü etkinleştirdikten sonra sporcu gönderebilir.</p><div class="grid"><div><label>E-posta</label><input type="email" id="email" autocomplete="email"></div><div><label>Şifre (en az 8 karakter)</label><input type="password" id="password" autocomplete="current-password"></div></div><button id="login">Giriş yap</button><button id="signup" class="secondary">Kulüp hesabı oluştur</button></section>
+<section id="guest" class="card">
+<h2>Şifresiz sporcu başvurusu</h2>
+<p class="hint">Kulüp yetkilileri üye olmadan doğrudan form doldurabilir. Başvurular yönetici onayına gönderilir. Kulüp bilgileri henüz doğrulanmamış sayılır.</p>
+<form id="guestForm">
+<div class="grid">
+<div><label for="guestClub">Kulüp adı</label><input id="guestClub" required maxlength="150"></div>
+<div><label for="guestCoach">Antrenör adı soyadı</label><input id="guestCoach" required maxlength="150"></div>
+<div><label for="guestPhone">İletişim telefonu</label><input id="guestPhone" type="tel" required maxlength="30"></div>
+<div><label for="guestName">Sporcu adı soyadı</label><input id="guestName" required maxlength="150"></div>
+<div><label for="guestBirth">Doğum tarihi</label><input id="guestBirth" type="date" required></div>
+<div><label for="guestGender">Cinsiyet</label><select id="guestGender"><option>Erkek</option><option>Bayan</option></select></div>
+<div><label for="guestAge">Yaş grubu</label><select id="guestAge"><option>Alt Minik</option><option>Minik</option><option>Yıldız</option><option>Genç</option><option>Ümit</option><option>Büyük</option></select></div>
+<div><label for="guestWeight">Kilo kategorisi</label><input id="guestWeight" required placeholder="30 veya +57" maxlength="10"></div>
+<div><label for="guestLicense">Lisans numarası (isteğe bağlı)</label><input id="guestLicense" maxlength="100"></div>
+</div>
+<div class="hidden" aria-hidden="true"><label for="guestWebsite">Web sitesi</label><input id="guestWebsite" tabindex="-1" autocomplete="off"></div>
+<button type="submit" id="guestSubmit">Başvuruyu yöneticiye gönder</button>
+</form>
+</section>
+<section id="auth" class="card"><details><summary style="font-weight:700;cursor:pointer">Yalnız yönetici girişi</summary>
+<p class="hint">Yönetici hesabınızı e-posta ve şifrenizle açın. Kulüpler için giriş gerekmiyor.</p>
+<div class="grid"><div><label for="email">Yönetici e-posta</label><input type="email" id="email" autocomplete="email"></div><div><label for="password">Şifre</label><input type="password" id="password" autocomplete="current-password"></div></div>
+<button id="login">Yönetici girişi</button></details></section>
 <section id="account" class="card hidden"><h2>Hesap ve kulüp</h2><div id="who"></div><div class="grid"><div><label>Kulüp adı</label><input id="club"></div><div><label>Antrenör</label><input id="coach"></div><div><label>Telefon</label><input id="phone" type="tel"></div></div><button id="profileSave">İlk kulüp kaydını oluştur</button><button id="logout" class="secondary">Çıkış yap</button><p class="hint">Kulüp adı değişikliği gerekiyorsa yöneticinizle görüşün.</p></section>
 <section id="apply" class="card hidden"><h2>Sporcu başvurusu</h2><form id="athleteForm"><div class="grid">
 <div><label>Sporcu adı soyadı</label><input id="athleteName" required></div>
@@ -18,7 +40,7 @@
 <div><label>Lisans numarası (isteğe bağlı)</label><input id="license"></div>
 </div><button type="submit">Başvuruyu yöneticiye gönder</button></form></section>
 <section id="applications" class="card hidden"><h2>Başvurular</h2><button id="refresh" class="secondary">Yenile</button><div class="scroll" id="table"></div></section>
-<section id="admin" class="card hidden"><h2>Yönetici onay paneli</h2><p class="hint">Kulüp hesabını etkinleştirin; sporcu başvurusunu onaylayın veya reddedin.</p><h3>Kulüpler</h3><div class="scroll" id="clubsTable"></div><h3>Sporcular</h3><div class="scroll" id="adminTable"></div></section>
+<section id="admin" class="card hidden"><h2>Yönetici onay paneli</h2><p class="hint">Kulüp hesabını etkinleştirin; sporcu başvurusunu onaylayın veya reddedin.</p><h3>Kulüpler</h3><div class="scroll" id="clubsTable"></div><h3>Hesaplı sporcu başvuruları</h3><div class="scroll" id="adminTable"></div><h3>Şifresiz kulüp başvuruları</h3><button id="refreshGuest" class="secondary">Misafir başvurularını yenile</button><div class="scroll" id="guestTable"></div></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -40,7 +62,7 @@ async function boot(){
  await load();
 }
 async function load(){
- show('auth',!session);show('account',!!session);show('apply',false);show('applications',false);show('admin',false);
+ show('auth',!session);show('guest',!session);show('account',!!session);show('apply',false);show('applications',false);show('admin',false);
  if(!session){state('Giriş yapılmadı');return}
  state('Hesap açık');$('who').textContent='E-posta: '+session.user.email;
  const {data, error:err}=await api.from('club_profiles').select('*').eq('user_id',session.user.id).maybeSingle();
@@ -53,9 +75,29 @@ async function load(){
  state(profile.role==='admin'?'Yönetici hesabı aktif':'Kulüp hesabı aktif');
  show('apply',true);show('applications',true);show('admin',profile.role==='admin');
  await list();
+ if(profile.role==='admin')await listGuest();
 }
 $('login').onclick=async()=>{const {error:err}=await api.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(err)error(err);else notify('Giriş yapıldı')};
-$('signup').onclick=async()=>{const pw=$('password').value;if(pw.length<8){notify('Şifre en az 8 karakter olmalı.');return}const {data,error:err}=await api.auth.signUp({email:$('email').value.trim(),password:pw});if(err)error(err);else notify(data.session?'Hesap açıldı. Kulüp bilgilerini girin.':'Hesap oluşturuldu. E-postanızı doğruladıktan sonra giriş yapın.')};
+// Kulüpler için hesap açma zorunluluğu kaldırıldı; yönetici girişi korunuyor.
+$('guestForm').onsubmit=async ev=>{
+ ev.preventDefault();
+ if(!api){notify('Veritabanına bağlantı kurulamadı.');return}
+ if($('guestWebsite').value.trim()){notify('Başvurunuz alındı.');return}
+ const weight=$('guestWeight').value.trim();
+ if(!/^\\+?\\d+(?:\\.\\d+)?$/.test(weight)){notify('Kilo kategorisini 30 veya +57 biçiminde yazın.');return}
+ const button=$('guestSubmit');button.disabled=true;
+ const payload={
+  club_name:$('guestClub').value.trim(),coach_name:$('guestCoach').value.trim(),
+  contact_phone:$('guestPhone').value.trim(),athlete_name:$('guestName').value.trim(),
+  birth_date:$('guestBirth').value,gender:$('guestGender').value,
+  age_group:$('guestAge').value,weight,license:$('guestLicense').value.trim()
+ };
+ try{
+  const {error:err}=await api.from('guest_athlete_applications').insert(payload);
+  if(err){error(err);return}
+  ev.target.reset();notify('Başvuru alındı. Yönetici incelemesinden sonra kesinleşecektir.');
+ }finally{button.disabled=false}
+};
 $('logout').onclick=async()=>{await api.auth.signOut();profile=null;session=null;await load()};
 $('profileSave').onclick=async()=>{
  if(!session)return;const name=$('club').value.trim(),coach=$('coach').value.trim();
@@ -87,6 +129,21 @@ async function list(){
  $('clubsTable').querySelectorAll('[data-club]').forEach(b=>b.onclick=()=>approveClub(b.dataset.club,b.dataset.active==='true'));
  $('adminTable').innerHTML='<table><tr><th>Sporcu</th><th>Kulüp</th><th>Kategori</th><th>Durum</th><th>İşlem</th></tr>'+apps.map(a=>'<tr><td>'+e(a.athlete_name)+'</td><td>'+e(clubMap[a.user_id]||'—')+'</td><td>'+e(a.age_group+' / '+a.gender+' / '+a.weight+' kg')+'</td><td>'+e(st[a.status])+'</td><td>'+(a.status==='pending'?'<button data-id="'+e(a.id)+'" data-status="approved">Onayla</button><button class="danger" data-id="'+e(a.id)+'" data-status="rejected">Reddet</button>':'—')+'</td></tr>').join('')+'</table>';
  $('adminTable').querySelectorAll('[data-status]').forEach(b=>b.onclick=()=>approveAthlete(b.dataset.id,b.dataset.status));
+}
+$('refreshGuest').onclick=listGuest;
+async function listGuest(){
+ if(!session||profile?.role!=='admin')return;
+ const {data,error:err}=await api.from('guest_athlete_applications').select('*').order('created_at',{ascending:false}).limit(500);
+ if(err){error(err);return}
+ const statuses={pending:'Beklemede',approved:'Onaylandı',rejected:'Reddedildi'};
+ $('guestTable').innerHTML='<table><tr><th>Kulüp</th><th>Antrenör / Telefon</th><th>Sporcu</th><th>Kategori</th><th>Durum</th><th>İşlem</th></tr>'+
+ (data||[]).map(a=>'<tr><td>'+e(a.club_name)+'</td><td>'+e(a.coach_name)+' / '+e(a.contact_phone)+'</td><td>'+e(a.athlete_name)+'</td><td>'+e(a.age_group+' / '+a.gender+' / '+a.weight+' kg')+'</td><td>'+e(statuses[a.status]||a.status)+'</td><td>'+(a.status==='pending'?'<button data-guest-id="'+e(a.id)+'" data-guest-status="approved">Onayla</button><button class="danger" data-guest-id="'+e(a.id)+'" data-guest-status="rejected">Reddet</button>':'—')+'</td></tr>').join('')+'</table>';
+ $('guestTable').querySelectorAll('[data-guest-status]').forEach(b=>b.onclick=()=>reviewGuest(b.dataset.guestId,b.dataset.guestStatus));
+}
+async function reviewGuest(id,status){
+ if(!confirm(status==='approved'?'Kulüp bilgilerini kontrol ettiniz mi? Başvuru onaylansın mı?':'Başvuru reddedilsin mi?'))return;
+ const {error:err}=await api.from('guest_athlete_applications').update({status}).eq('id',id).eq('status','pending');
+ if(err)error(err);else await listGuest();
 }
 async function del(id){if(!confirm('Bekleyen sporcu başvurusunu silmek istiyor musunuz?'))return;const {error:err}=await api.from('athlete_applications').delete().eq('id',id).eq('status','pending');if(err)error(err);else await list()}
 async function approveClub(id,active){const {error:err}=await api.from('club_profiles').update({active}).eq('user_id',id);if(err)error(err);else await list()}
