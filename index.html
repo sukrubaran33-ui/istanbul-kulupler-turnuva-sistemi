@@ -1,723 +1,118 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>İstanbul Kulüpler Sistemi</title><style>
+:root{font-family:system-ui,Arial;color:#17243b;background:#f2f5fa}*{box-sizing:border-box}body{margin:0}header{background:#10254c;color:white;padding:20px}h1{font-size:23px;margin:0}header p{margin:5px 0;color:#dbe6fa}.wrap{max-width:1100px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 20px}.tabs button{background:white;color:#10254c}.tabs button.active{background:#bc2035;color:white}.panel{display:none}.panel.active{display:block}.card{background:white;border-radius:14px;padding:18px;margin:12px 0;box-shadow:0 2px 12px #162b4814}h2{margin:0 0 12px;font-size:20px}label{display:block;font-size:13px;font-weight:650;margin:10px 0 4px}input,select,textarea{width:100%;padding:11px;border:1px solid #c9d3e0;border-radius:9px;font:inherit}button{border:0;border-radius:9px;padding:11px 15px;background:#142d58;color:white;font-weight:700;cursor:pointer}button.secondary{background:#e6ecf5;color:#132d56}button.danger{background:#bc2035}button.gold{background:#bd8621}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.muted{color:#66758b;font-size:13px}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:580px}th,td{border-bottom:1px solid #e2e8f0;text-align:left;padding:10px;font-size:14px}th{background:#eef2f8}.pill{display:inline-block;background:#eef2f8;border-radius:100px;padding:4px 9px;font-size:12px}.bracket{border:2px solid #dbe4ef;border-radius:12px;padding:16px;margin:15px 0;break-inside:avoid}.match{border-left:4px solid #bd8621;padding:8px 12px;background:#f6f8fb;margin:7px 0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.stat{font-size:28px;font-weight:800;color:#bc2035}.note{padding:12px;background:#fff6e6;border-radius:8px;color:#674b18}.hide{display:none!important}@media print{header,.tabs,.no-print,button,form,.muted{display:none!important}body{background:white}.wrap{max-width:none;padding:0}.panel{display:none!important}#print-area{display:block!important}.card{box-shadow:none;border:0;padding:0}.bracket{page-break-inside:avoid}h1,h2{color:black}}
 
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>İstanbul Kulüpler Turnuva Sistemi</title>
-<style>
-body{font-family:Arial,sans-serif;background:#f1f5fb;margin:0;padding:16px;color:#172b4d}
-h1{text-align:center;color:#173b70;font-size:25px}
-h2{text-align:center;font-size:19px}
-button{background:#193d74;color:white;border:0;border-radius:8px;padding:14px;margin:6px 0;width:100%;font-size:16px}
-input,select{box-sizing:border-box;width:100%;padding:13px;margin:6px 0;border:1px solid #ccd5e0;border-radius:7px;font-size:16px}
-section{display:none;background:white;padding:15px;border-radius:12px;margin-top:15px}
-.card{background:#edf3fb;padding:12px;margin:8px 0;border-radius:8px;overflow-wrap:anywhere}
-small{color:#52657b} @media print {
-  @page { size: A4 portrait; margin: 12mm; }
-  body > h1, body > h2, body > div, button { display: none !important; }
-  section { display: none !important; }
-  #kura { display: block !important; padding: 0; }
-  #kura .card { break-inside: avoid; page-break-inside: avoid; }
+</style><style>
+#printBracketArea{display:none}
+@media print{
+ body.print-bracket #print-area{display:none!important}
+ body.print-bracket #printBracketArea{display:block!important} body.print-bracket #print-area{display:none!important}
+ body.print-list #print-area{display:block!important} body.print-list #print-area .card{display:block!important}
+ body.print-list #printBracketArea{display:none!important}
+ #printBracketArea .sheet{break-after:page;page-break-after:always;break-inside:avoid;padding:4mm 0}
+ #printBracketArea .sheet:last-child{break-after:auto;page-break-after:auto}
+ #printBracketArea .sheet h2{text-align:center;font-size:17px}
+ #printBracketArea .sheet h3{text-align:center;font-size:14px}
+ #printBracketArea .draw-table{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;margin-top:12mm}
+ #printBracketArea .draw-table td,#printBracketArea .draw-table th{border:1px solid #555;padding:12px 5px;font-size:11px;overflow-wrap:anywhere;height:22mm}
+ #printBracketArea .draw-table th{background:#eee!important}
+ #printBracketArea .foot{margin-top:12mm;font-size:12px}
 }
-</style>
-</head>
-<body>
-<h1>İSTANBUL KULÜPLER</h1>
-<h2>Turnuva ve Kura Sistemi</h2>
-
-<div style="display:flex;gap:10px;margin:15px 0;">
-  <button onclick="ac('yonetici')">
-    Yönetici Paneli
-  </button>
-  <button onclick="ac('kulup')">
-    Kulüp Paneli
-  </button>
-</div>
-
-
-<section id="kulup">
-  <h2>🥋 Kulüp Paneli</h2>
-  <p>İstanbul Kulüpler Turnuva Sistemi</p>
-
-  <div class="card">
-    <h3>🏢 Kulüp Başvurusu</h3>
-    <input id="kulupAdi" placeholder="Kulüp Adı">
-    <input id="antrenor" placeholder="Antrenör Adı Soyadı">
-    <input id="telefon" type="tel"
-      placeholder="İletişim Telefonu">
-    <button onclick="kulupEkle()">
-      Kulüp Başvurusu Yap
-    </button>
-  </div>
-
-  <div class="card">
-    <h3>📋 Kulüp Listesi</h3>
-    <div id="kulupListe"></div>
-  </div>
-
-  <div class="card">
-    <h3>🥋 Sporcu Başvuruları</h3>
-    <button onclick="ac('sporcu')">
-      Sporcu Kaydı Yap
-    </button>
-  </div>
-
-  <div class="card">
-    <h3>🏆 Turnuvalar</h3>
-    <button onclick="ac('turnuva')">
-      Turnuvaları Gör
-    </button>
-  </div>
-</section>
-
-
-<section id="sporcu">
-<h2>Sporcu Kayıtları</h2>
-<select id="sporcuKulup"></select>
-<input id="sporcuAdi" placeholder="Sporcu adı soyadı">
-<input id="dogum" type="date">
-<select id="cinsiyet">
-<option value="Erkek">Erkek</option>
-<option value="Kadın">Kadın</option>
-</select>
-<select id="kategori">
-<option>Alt Minik</option>
-<option>Minik</option>
-<option>Yıldız</option>
-<option>Genç</option>
-<option>Büyük</option>
-</select>
-<input id="kilo" type="number" min="1" step="0.1" placeholder="Kilo (kg)">
-<button onclick="sporcuEkle()">Sporcuyu Kaydet</button>
-<div id="sporcuListe"></div>
-</section>
-
-<section id="turnuva">
-<h2>Turnuva Yönetimi</h2>
-<input id="turnuvaAdi" placeholder="Turnuva adı">
-<input id="turnuvaTarih" type="date">
-<button onclick="turnuvaKaydet()">Turnuvayı Kaydet</button>
-<div id="turnuvaListe"></div>
-</section>
-
-<section id="kura">
-<h2>Otomatik 4'lü Kura</h2>
-<p>Sporcular cinsiyet, yaş kategorisi ve kayıtlı kilolarına göre ayrılır.</p>
-<button onclick="kuraCek()">Kuraları Oluştur</button>
-<div id="kuraListe"></div>
-<button onclick="kuraYazdir()">Yazdır / PDF</button> 
-  <button onclick="eslesmeliKuraYazdir()">🥋 A4 Eşleşmeli Kura</button>
-</section>
-
-
-<section id="yonetici">
-  <h2>🔐 Yönetici Paneli</h2>
-  <p>İstanbul Kulüpler Turnuva Sistemi</p>
-
-  <div class="card">
-    <h3>🏆 Turnuva Yönetimi</h3>
-    <button onclick="ac('turnuva')">
-      Turnuva Oluştur / Yönet
-    </button>
-  </div>
-
-  <div class="card">
-    <h3>🏢 Kulüp Yönetimi</h3>
-    <button onclick="ac('kulup')">
-      Kulüp Başvurularını Gör
-    </button>
-    <div id="yoneticiKulupListe"></div>
-  </div>
-
-  <div class="card">
-    <h3>🥋 Sporcu Yönetimi</h3>
-    <button onclick="ac('sporcu')">
-      Sporcu Kayıtlarını Gör
-    </button>
-  </div>
-
-  <div class="card">
-    <h3>🎯 Otomatik Kura</h3>
-    <button onclick="ac('kura')">
-      Kura Panelini Aç
-    </button>
-  </div>
-
-  <div class="card">
-    <h3>⚙️ Yönetici İşlemleri</h3>
-    <button onclick="tumSporculariSil()"
-      style="background:#b91c1c">
-      Tüm Sporcuları Sil
-    </button>
-  </div>
-</section>
-
-
-
+</style></head><body><header><div class="wrap"><h1>🏆 İSTANBUL KULÜPLER SİSTEMİ</h1><p>Taekwondo • Sporcu Başvurusu • Otomatik Kura • Maç Sonuçları</p></div></header><main class="wrap"><nav class="tabs no-print" id="tabs"></nav><div id="home" class="panel active"><div class="grid" id="stats"></div><div class="card"><h2>Turnuva bilgileri</h2><div class="grid"><div><label>Turnuva adı</label><input id="tname" placeholder="İstanbul Kulüpler Turnuvası"></div><div><label>Turnuva tarihi</label><input type="date" id="tdate"></div><div><label>Turnuva yeri</label><input id="tplace" placeholder="İstanbul"></div></div><div class="actions"><button onclick="saveTournament()">Turnuvayı kaydet</button><button class="secondary" onclick="exportData()">Verileri yedekle (JSON)</button><label style="margin:0"><input type="file" id="import" accept="application/json" style="max-width:220px" onchange="importData(event)">Yedeği geri yükle</label></div><p class="note">Bu sürüm verileri kullandığınız tarayıcıda saklar. Tarayıcı verileri silinirse kayıtlar kaybolabilir; düzenli yedek alın. Kulüplerin farklı cihazlardan ortak kayıt yapması henüz desteklenmez.</p></div></div>
+<section id="clubs" class="panel"><div class="card"><h2>Kulüp kaydı</h2><form id="clubForm"><div class="grid"><div><label>Kulüp adı</label><input id="cname" required></div><div><label>Antrenör</label><input id="ccoach" required></div><div><label>Telefon</label><input id="cphone" type="tel"></div><div><label>İl / ilçe</label><input id="ccity" placeholder="İstanbul / Fatih"></div></div><div class="actions"><button>Kulüp ekle</button></div></form></div><div class="card"><h2>Kulüpler</h2><div class="tablewrap" id="clubList"></div></div></section>
+<section id="athletes" class="panel"><div class="card"><h2>Sporcu başvurusu</h2><form id="athleteForm"><div class="grid"><div><label>Ad soyad</label><input id="aname" required></div><div><label>Doğum tarihi</label><input type="date" id="abirth" required></div><div><label>Cinsiyet</label><select id="agender"><option>Erkek</option><option>Bayan</option></select></div><div><label>Yaş grubu</label><select id="aage"></select></div><div><label>Kilo kategorisi</label><select id="aweight"></select></div><div><label>Kulüp</label><select id="aclub" required></select></div><div><label>Lisans numarası (isteğe bağlı)</label><input id="alicense"></div></div><div class="actions"><button id="athleteSubmitButton">Başvuruyu kaydet</button><button type="button" class="secondary hide" id="cancelAthleteEdit" onclick="cancelEditAthlete()">Düzenlemeyi iptal et</button></div></form><p class="muted">Yaş ve kilo seçenekleri başlangıç şablonudur. Turnuvanın resmî talimatına göre kategorileri kontrol edin.</p></div><div class="card"><h2>Sporcu listesi</h2><input id="asearch" placeholder="Sporcu ara..." oninput="render()"><div class="tablewrap" id="athleteList"></div></div></section>
+<section id="categories" class="panel"><div class="card"><h2>Yaş ve kilo kategorileri</h2><p>Yaş grupları: Alt Minik, Minik, Yıldız, Genç, Ümit, Büyük. 2026 doğum yılı şablonu: Minik 2014–2016, Yıldız 2012–2014, Genç 2009–2011, Ümit 2006–2010, Büyük 2009 ve öncesi. Alt Minik yönetici tarafından belirlenir.</p><p class="note">Görselde bazı erkek kilo değerleri eksik olduğundan sistemde bunlar başlangıçta tanımlı değildir. Her kategorinin kilolarını aşağıdan düzenleyin.</p><div class="grid"><div><label>Yaş grubu</label><select id="kage"></select></div><div><label>Cinsiyet</label><select id="kgender"><option>Erkek</option><option>Bayan</option></select></div></div><label>Virgülle ayrılmış kilo kategorileri (örnek: 30,33,36,+57)</label><textarea id="kvalues" rows="3"></textarea><div class="actions"><button onclick="saveWeights()">Kiloları kaydet</button></div></div></section>
+<section id="draws" class="panel"><div class="card"><h2>Otomatik kura</h2><p>Her kura en fazla 4 sporcudan oluşur. Sporcular yaş grubu, cinsiyet ve kiloya göre ayrılır. Aynı kulüp sporcuları mümkün olduğunca ayrı gruplara dağıtılır.</p><div class="actions"><button onclick="makeDraws()">🎲 Otomatik kura çek</button><button class="secondary" onclick="show('print-area')">Kura listelerini görüntüle</button></div><p class="note">Yeni kura çekmek mevcut maç sonuçlarını siler. İşlemden önce onay alınır.</p></div><div id="drawPreview"></div></section>
+<section id="results" class="panel"><div class="card"><h2>Maç sonuçları</h2><p class="muted">Her eşleşmede kazananı seçin. Final eşleşmesi otomatik oluşur.</p><div id="resultList"></div></div></section>
+<section id="medals" class="panel"><div class="card"><h2>🏅 Madalya sıralaması</h2><div class="tablewrap" id="medalList"></div></div></section>
+<section id="print-area" class="panel"><div class="card"><h2>Yazdırılabilir A4 kura listeleri</h2><div class="actions no-print"><button onclick="printDrawList()">🖨️ A4 liste / PDF</button><button onclick="printBracket()">🥋 A4 eşleşmeli çizelge / PDF</button></div><div id="printList"></div></div></section><div id="printBracketArea"></div></main>
 <script>
-const anahtar="istanbulTurnuvaDemo";
-let veri;
-try{
-veri=JSON.parse(localStorage.getItem(anahtar))||{};
-}catch(e){veri={}}
-veri.kulupler=veri.kulupler||[];
-veri.sporcular=veri.sporcular||[];
-veri.turnuvalar=veri.turnuvalar||[];
-
-function kaydet(){
-localStorage.setItem(anahtar,JSON.stringify(veri));
-listele();
+const ages=['Alt Minik','Minik','Yıldız','Genç','Ümit','Büyük'];const base={
+'Minik|Erkek':['30','33','36','40','45','50','57','+57'],'Minik|Bayan':['27','30','33','36','40','45','50','57','+57'],
+'Yıldız|Bayan':['29','33','37','41','44','47','51','55','59','+59'],
+'Genç|Bayan':['42','44','46','49','52','55','59','63','68','+68'],
+'Ümit|Bayan':['46','49','53','57','62','67','73','+73'],'Büyük|Bayan':['46','49','53','57','62','67','73','+73'],
+'Ümit|Erkek':['54','58','63','68','74','80','87','+87'],'Büyük|Erkek':['54','58','63','68','74','80','87','+87']};
+let db;try{db=JSON.parse(localStorage.getItem('istanbulKulupV1'))}catch(e){}if(!db||!Array.isArray(db.clubs)||!Array.isArray(db.athletes))db={clubs:[],athletes:[],draws:[],weights:base,tournament:{name:'İstanbul Kulüpler Turnuvası',date:'',place:'İstanbul'}};db.weights ||= structuredClone(base);db.draws ||= [];
+const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const save=()=>localStorage.setItem('istanbulKulupV1',JSON.stringify(db));const id=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random();const clubName=x=>db.clubs.find(c=>c.id===x)?.name||'—';const athlete=x=>db.athletes.find(a=>a.id===x);const athleteName=x=>esc(athlete(x)?.name||'—');
+const nav=[['home','Ana Sayfa'],['clubs','Kulüpler'],['athletes','Sporcu Başvurusu'],['categories','Kilolar'],['draws','Otomatik Kura'],['results','Maç Sonuçları'],['medals','Madalyalar'],['print-area','A4 Yazdır']];$('tabs').innerHTML=nav.map(([k,n])=>`<button data-tab="${k}" onclick="show('${k}')">${n}</button>`).join('');function show(k){document.querySelectorAll('.panel').forEach(e=>e.classList.toggle('active',e.id===k));document.querySelectorAll('[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===k));render();scrollTo(0,0)}
+function options(id,vals){$(id).innerHTML=vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')};options('aage',ages);options('kage',ages);function weightOptions(){let vals=db.weights[$('aage').value+'|'+$('agender').value]||[];options('aweight',vals.length?vals:['Tanımlanmadı'])}function categoryEdit(){let v=db.weights[$('kage').value+'|'+$('kgender').value]||[];$('kvalues').value=v.join(', ')}$('aage').onchange=weightOptions;$('agender').onchange=weightOptions;$('kage').onchange=categoryEdit;$('kgender').onchange=categoryEdit;function saveWeights(){let v=$('kvalues').value.split(',').map(x=>x.trim()).filter(Boolean);if(v.some(x=>!/^\+?\d+(?:\.\d+)?$/.test(x))){alert('Kiloları örnekteki gibi yazın.');return}db.weights[$('kage').value+'|'+$('kgender').value]=[...new Set(v)];save();weightOptions();alert('Kategoriler kaydedildi')}
+$('clubForm').onsubmit=e=>{e.preventDefault();let name=$('cname').value.trim();if(db.clubs.some(c=>c.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'))){alert('Bu kulüp zaten kayıtlı');return}db.clubs.push({id:id(),name,coach:$('ccoach').value.trim(),phone:$('cphone').value.trim(),city:$('ccity').value.trim()});save();e.target.reset();render()};
+let editingAthleteId=null;
+$('athleteForm').onsubmit=e=>{e.preventDefault();let name=$('aname').value.trim(),birth=$('abirth').value,club=$('aclub').value,age=$('aage').value,gender=$('agender').value,weight=$('aweight').value;if(!club||weight==='Tanımlanmadı'){alert('Önce kulüp ve geçerli kilo kategorisi seçin.');return}let year=Number(birth.slice(0,4)),ranges={Minik:[2014,2016],Yıldız:[2012,2014],Genç:[2009,2011],Ümit:[2006,2010],Büyük:[0,2009]};let r=ranges[age];if(r&&db.tournament.date?.startsWith('2026')&&!(year>=r[0]&&year<=r[1])){alert('2026 için seçilen yaş grubuyla doğum yılı uyuşmuyor.');return}if(db.athletes.some(a=>a.id!==editingAthleteId&&a.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr')&&a.birth===birth)){alert('Bu sporcu zaten kayıtlı');return}if(editingAthleteId){
+ const existing=db.athletes.find(a=>a.id===editingAthleteId);
+ if(!existing){alert('Düzenlenecek sporcu bulunamadı.');return}
+ if(db.athletes.some(a=>a.id!==editingAthleteId&&a.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr')&&a.birth===birth)){alert('Bu sporcu zaten kayıtlı');return}
+ const inDraw=db.draws.some(d=>d.ids.includes(editingAthleteId));
+ if(inDraw&&!confirm('Bu sporcu kurada yer alıyor. Değişiklikten sonra mevcut kuralar ve sonuçlar sıfırlanacak. Devam edilsin mi?'))return;
+ Object.assign(existing,{name,birth,club,age,gender,weight,license:$('alicense').value.trim()});
+ if(inDraw)db.draws=[];
+ save();cancelEditAthlete();render();alert('Sporcu güncellendi');return;
+ }
+ db.athletes.push({id:id(),name,birth,club,age,gender,weight,license:$('alicense').value.trim()});save();e.target.reset();weightOptions();render();alert('Sporcu başvurusu kaydedildi')};
+function saveTournament(){db.tournament={name:$('tname').value.trim(),date:$('tdate').value,place:$('tplace').value.trim()};save();alert('Turnuva kaydedildi')}
+function editAthlete(aid){
+ const a=db.athletes.find(x=>x.id===aid);if(!a)return;
+ editingAthleteId=aid;
+ $('aname').value=a.name;$('abirth').value=a.birth;$('agender').value=a.gender;
+ $('aage').value=a.age;weightOptions();$('aweight').value=a.weight;
+ $('aclub').value=a.club;$('alicense').value=a.license||'';
+ $('athleteSubmitButton').textContent='Değişiklikleri kaydet';
+ $('cancelAthleteEdit').classList.remove('hide');
+ $('athleteForm').scrollIntoView({behavior:'smooth',block:'start'});
 }
- 
-function tumSporculariSil() {
-  if (!confirm("Bütün sporcular silinecek. Kulüpler kalacak. Emin misiniz?")) return;
-  veri.sporcular = [];
-  kaydet();
-  const kura = document.getElementById("kuraListe");
-  if (kura) kura.replaceChildren();
-  alert("Bütün sporcular silindi. Kulüpler korundu.");
+function cancelEditAthlete(){
+ editingAthleteId=null;$('athleteForm').reset();weightOptions();
+ $('athleteSubmitButton').textContent='Başvuruyu kaydet';
+ $('cancelAthleteEdit').classList.add('hide');
 }
-  function ac(id){
-document.querySelectorAll("section").forEach(x=>x.style.display="none");
-document.getElementById(id).style.display="block";
-listele();
+function removeAthlete(aid){
+ const a=db.athletes.find(x=>x.id===aid);if(!a)return;
+ const inDraw=db.draws.some(d=>d.ids.includes(aid));
+ const message=inDraw?'"'+a.name+'" silinsin mi? Sporcu mevcut kurada bulunduğu için bütün kuralar ve maç sonuçları sıfırlanacak.':'"'+a.name+'" adlı sporcuyu kalıcı olarak silmek istiyor musunuz?';
+ if(!confirm(message))return;
+ db.athletes=db.athletes.filter(x=>x.id!==aid);
+ if(inDraw)db.draws=[];
+ if(editingAthleteId===aid)cancelEditAthlete();
+ save();render();
 }
-function deger(id){
-return document.getElementById(id).value.trim();
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function spread(group){let shuffled=shuffle(group),chunks=Array.from({length:Math.ceil(group.length/4)},()=>[]);for(let a of shuffled){let choices=chunks.filter(c=>c.length<4),min=Math.min(...choices.map(c=>c.filter(x=>x.club===a.club).length));choices=choices.filter(c=>c.filter(x=>x.club===a.club).length===min);let least=Math.min(...choices.map(c=>c.length));choices=choices.filter(c=>c.length===least);shuffle(choices)[0].push(a)}return chunks}
+function makeDraws(){if(db.draws.length&&!confirm('Mevcut kuralar ve bütün maç sonuçları silinip yeniden çekilecek. Emin misiniz?'))return;let groups={};for(let a of db.athletes){let k=[a.age,a.gender,a.weight].join('|');(groups[k]??=[]).push(a)}db.draws=[];let n=1;for(let key of Object.keys(groups).sort()){for(let chunk of spread(groups[key])){db.draws.push({id:id(),number:n++,key,ids:chunk.map(x=>x.id),semi:{},final:null})}}save();render();alert(db.draws.length+' kura oluşturuldu')}
+function bouts(d){let a=d.ids;if(a.length===1)return [];if(a.length===2)return [{key:'final',label:'Final',players:a}];if(a.length===3){let s=d.semi['s1'];return [{key:'s1',label:'Yarı final',players:[a[1],a[2]]},{key:'final',label:'Final',players:[a[0],s].filter(Boolean)}]}let s1=d.semi.s1,s2=d.semi.s2;return [{key:'s1',label:'1. Yarı final',players:[a[0],a[1]]},{key:'s2',label:'2. Yarı final',players:[a[2],a[3]]},{key:'final',label:'Final',players:[s1,s2].filter(Boolean)}]}
+function setWinner(di,key,w){let d=db.draws[di],b=bouts(d).find(x=>x.key===key);if(!b||b.players.length!==2||!b.players.includes(w))return;if(key==='final')d.final=w;else{d.semi[key]=w;d.final=null}save();render()}
+function medals(d){let a=d.ids;if(a.length<2||!d.final)return null;let b=bouts(d).find(x=>x.key==='final');if(b.players.length!==2)return null;let silver=b.players.find(x=>x!==d.final);let bronze=[];if(a.length===3)bronze=[a[1],a[2]].filter(x=>x!==d.semi.s1);if(a.length===4)bronze=[a[0],a[1]].filter(x=>x!==d.semi.s1).concat([a[2],a[3]].filter(x=>x!==d.semi.s2));return {gold:d.final,silver,bronze}}
+function render(){let t=db.tournament;$('tname').value=t.name||'';$('tdate').value=t.date||'';$('tplace').value=t.place||'';options('aclub',db.clubs.map(c=>c.id));$('aclub').innerHTML=db.clubs.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');$('stats').innerHTML=[['Kulüp',db.clubs.length],['Sporcu',db.athletes.length],['Kura',db.draws.length],['Tamamlanan kura',db.draws.filter(d=>d.final).length]].map(([a,b])=>`<div class="card"><div class="stat">${b}</div><b>${a}</b></div>`).join('');$('clubList').innerHTML='<table><tr><th>Kulüp</th><th>Antrenör</th><th>İlçe</th><th>Sporcu</th></tr>'+db.clubs.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.coach)}</td><td>${esc(c.city)}</td><td>${db.athletes.filter(a=>a.club===c.id).length}</td></tr>`).join('')+'</table>';let q=$('asearch').value.toLocaleLowerCase('tr');$('athleteList').innerHTML='<table><tr><th>Ad soyad</th><th>Kulüp</th><th>Kategori</th><th>Kilo</th><th>İşlem</th></tr>'+db.athletes.filter(a=>a.name.toLocaleLowerCase('tr').includes(q)).map(a=>`<tr><td>${esc(a.name)}</td><td>${esc(clubName(a.club))}</td><td>${esc(a.age)} / ${esc(a.gender)}</td><td>${esc(a.weight)} kg</td><td><button class="secondary" onclick="editAthlete('${a.id}')">Düzenle</button> <button class="danger" onclick="removeAthlete('${a.id}')">Sil</button></td></tr>`).join('')+'</table>';
+let html=db.draws.map((d,i)=>{let bs=bouts(d),m=medals(d);return `<div class="bracket"><h3>Kura ${d.number} — ${esc(d.key.replaceAll('|',' / '))} kg</h3>${d.ids.map(x=>`<div>${athleteName(x)} <small>(${esc(clubName(athlete(x)?.club))})</small></div>`).join('')}${d.ids.length===1?'<p class="pill">Rakip bekliyor</p>':''}${bs.map(b=>`<div class="match"><b>${b.label}</b><div>${b.players.map(x=>athleteName(x)).join(' — ')}${b.players.length===1?' (rakip bekleniyor)':''}</div>${b.players.length===2?`<div class="actions no-print">${b.players.map(x=>`<button class="${(b.key==='final'?d.final:d.semi[b.key])===x?'gold':'secondary'}" onclick="setWinner(${i},'${b.key}','${x}')">${athleteName(x)} kazandı</button>`).join('')}</div>`:''}</div>`).join('')}${m?`<p><b>🥇 ${athleteName(m.gold)}　🥈 ${athleteName(m.silver)}　🥉 ${m.bronze.map(athleteName).join(' / ')}</b></p>`:''}</div>`}).join('');$('drawPreview').innerHTML=html||'<div class="card">Henüz kura oluşturulmadı.</div>';$('resultList').innerHTML=html||'Önce kura çekin.';$('printList').innerHTML=`<h2>${esc(t.name)}</h2><p>${esc(t.date)} — ${esc(t.place)}</p>`+html;let scores={};for(let d of db.draws){let m=medals(d);if(!m)continue;for(let [type,ids] of [['gold',[m.gold]],['silver',[m.silver]],['bronze',m.bronze]])for(let aid of ids){let c=athlete(aid)?.club;if(!c)continue;(scores[c]??={gold:0,silver:0,bronze:0})[type]++}}$('medalList').innerHTML='<table><tr><th>Kulüp</th><th>🥇</th><th>🥈</th><th>🥉</th></tr>'+Object.entries(scores).sort((a,b)=>b[1].gold-a[1].gold||b[1].silver-a[1].silver||b[1].bronze-a[1].bronze).map(([c,s])=>`<tr><td>${esc(clubName(c))}</td><td>${s.gold}</td><td>${s.silver}</td><td>${s.bronze}</td></tr>`).join('')+'</table>'}
+function exportData(){let b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download='istanbul-kulupler-yedek.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.clubs)||!Array.isArray(x.athletes)||!Array.isArray(x.draws))throw Error();if(!confirm('Mevcut kayıtlar yedek dosyasıyla değiştirilsin mi?'))return;db=x;save();render();alert('Yedek yüklendi')}catch{alert('Geçersiz yedek dosyası')}};r.readAsText(f)}
+// Mobil tarayıcılarda açılır pencere yerine doğrudan yazdırma.
+function printDrawList(){
+ if(!db.draws.length){alert('Önce kura oluşturun.');return}
+ document.body.classList.remove('print-bracket');
+ document.body.classList.add('print-list');
+ window.print();
 }
-function kulupEkle(){
-let ad=deger("kulupAdi");
-if(!ad||!deger("antrenor"))return alert("Kulüp ve antrenör bilgilerini girin.");
-if(veri.kulupler.some(x=>x.ad===ad))return alert("Kulüp zaten kayıtlı.");
-veri.kulupler.push({ad,antrenor:deger("antrenor"),telefon:deger("telefon")});
-kaydet();alert("Kulüp kaydedildi.");
-}
-function sporcuEkle(){
-if(!deger("sporcuKulup")||!deger("sporcuAdi")||!deger("dogum")||!deger("kilo"))return alert("Bütün sporcu bilgilerini doldurun.");
-veri.sporcular.push({
-kulup:deger("sporcuKulup"),
-ad:deger("sporcuAdi"),
-dogum:deger("dogum"),
-cinsiyet:deger("cinsiyet"),
-kategori:deger("kategori"),
-kilo:Number(deger("kilo"))
-});
-kaydet();alert("Sporcu kaydedildi.");
-}
-function turnuvaKaydet(){
-if(!deger("turnuvaAdi")||!deger("turnuvaTarih"))return alert("Turnuva bilgilerini girin.");
-veri.turnuvalar.push({ad:deger("turnuvaAdi"),tarih:deger("turnuvaTarih")});
-kaydet();alert("Turnuva kaydedildi.");
-}
-function listele(){
-const sec=document.getElementById("sporcuKulup");
-const eski=sec.value;
-sec.replaceChildren();
-veri.kulupler.forEach(k=>{
-const o=document.createElement("option");
-o.value=k.ad;o.textContent=k.ad;sec.appendChild(o);
-});
-sec.value=eski||sec.options[0]?.value||"";
-function goster(id,items,format){
-const el=document.getElementById(id);
-el.replaceChildren();
-items.forEach(x=>{
-const d=document.createElement("div");
-d.className="card";d.textContent=format(x);el.appendChild(d);
-});
-}
-goster("kulupListe",veri.kulupler,x=>x.ad+" — "+x.antrenor);
-goster("sporcuListe",veri.sporcular,x=>x.ad+" — "+x.kulup+" — "+x.kilo+" kg");
-goster("turnuvaListe",veri.turnuvalar,x=>x.ad+" — "+x.tarih);
-}
-function kuraCek(){
-const el=document.getElementById("kuraListe");
-el.replaceChildren();
-const gruplar={};
-veri.sporcular.forEach(s=>{
-const key=[s.cinsiyet,s.kategori,s.kilo].join("|");
-(gruplar[key]??=[]).push(s);
-});
-Object.entries(gruplar).forEach(([key,sporcular])=>{
-const karisik=[...sporcular];
-for(let i=karisik.length-1;i>0;i--){
-const j=Math.floor(Math.random()*(i+1));
-[karisik[i],karisik[j]]=[karisik[j],karisik[i]];
-}
-for(let i=0;i<karisik.length;i+=4){
-const kutu=document.createElement("div");
-kutu.className="card";
-const baslik=document.createElement("h3");
-baslik.textContent=key.replaceAll("|"," / ")+" — Grup "+(Math.floor(i/4)+1);
-kutu.appendChild(baslik);
-karisik.slice(i,i+4).forEach((s,n)=>{
-const p=document.createElement("p");
-p.textContent=(n+1)+". "+s.ad+" ("+s.kulup+")";
-kutu.appendChild(p);
-});
-el.appendChild(kutu);
-}
-});
-if(!veri.sporcular.length)el.textContent="Önce sporcu kaydedin.";
-}
-listele();
-</script>
-
-
-
-<button type="button" onclick="window.print()">
-  🖨️ A4 Kura Yazdır
-</button>
-
-<style>
-  
-  
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 12mm;
+function printBracket(){
+ if(!db.draws.length){alert('Önce kura oluşturun.');return}
+ const area=$('printBracketArea');area.replaceChildren();
+ for(const d of db.draws){
+  const sheet=document.createElement('article');sheet.className='sheet';
+  const h2=document.createElement('h2');h2.textContent=db.tournament.name||'İstanbul Kulüpler Turnuvası';sheet.appendChild(h2);
+  const h3=document.createElement('h3');h3.textContent='Kura '+d.number+' — '+d.key.replaceAll('|',' / ')+' kg';sheet.appendChild(h3);
+  const table=document.createElement('table');table.className='draw-table';
+  const header=table.insertRow();for(const name of ['Sporcu / Kulüp','Yarı Final','Final']){const th=document.createElement('th');th.textContent=name;header.appendChild(th)}
+  for(let i=0;i<4;i++){
+   const tr=table.insertRow();const a=athlete(d.ids[i]);
+   const td=tr.insertCell();td.textContent=a?a.name+' ('+clubName(a.club)+')':'BAY / Boş';
+   const semi=tr.insertCell();semi.textContent=i===0?'1. Yarı final: __________':i===2?'2. Yarı final: __________':'';
+   const fin=tr.insertCell();fin.textContent=i===1?'Final: ______________':'';
   }
-  body {
-    background: white !important;
-  }
-  button, input, select {
-    display: none !important;
-  }
-  section {
-    box-shadow: none !important;
-  }
-  .card {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+  sheet.appendChild(table);
+  const foot=document.createElement('p');foot.className='foot';foot.textContent='Şampiyon: ____________________   İkinci: ____________________   Üçüncü: ____________________';sheet.appendChild(foot);
+  area.appendChild(sheet);
+ }
+ document.body.classList.remove('print-list');document.body.classList.add('print-bracket');
+ window.print();
 }
-</style>
-  
-
-  
-<script>
-const SUPABASE_URL = "https://wdwyirlqgptbprfzleli.supabase.co";
-const SUPABASE_KEY = "sb_publishable_pDULKkJ7MWEg-GijQGnLHQ_mcP12FAy";
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-</script>
- 
-<script>
-console.log("Turnuva sistemi kontrol edildi.");
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("Turnuva sistemi hazır.");
-});
-</script>
-
- 
-<script>
-function kuraYazdir() {
-  window.print();
-}
-</script>
-
-<div id="macPaneli" class="card" style="display:none">
-  <h2>🥋 Yarı Final ve Final</h2>
-  <div id="macListesi"></div>
-</div>
-
-<script>
-function maclariOlustur() {
-  const gruplar = document.querySelectorAll("#kuraListe .card");
-  const panel = document.getElementById("macPaneli");
-  const liste = document.getElementById("macListesi");
-  liste.replaceChildren();
-
-  let sayac = 0;
-
-  gruplar.forEach((grup, index) => {
-    const sporcular = [...grup.querySelectorAll("p")]
-      .map(p => p.textContent.trim());
-
-    if (sporcular.length !== 4) return;
-    sayac++;
-
-    const kutu = document.createElement("div");
-    kutu.className = "card";
-
-    const baslik = document.createElement("h3");
-    baslik.textContent = "Grup " + (index + 1);
-    kutu.appendChild(baslik);
-
-    const kazananlar = [null, null];
-
-    function macOlustur(ad, adaylar, bitince) {
-      const alan = document.createElement("div");
-      const baslik = document.createElement("h4");
-      baslik.textContent = ad;
-      alan.appendChild(baslik);
-
-      adaylar.forEach(sporcu => {
-        const buton = document.createElement("button");
-        buton.textContent = sporcu;
-        buton.style.margin = "5px 0";
-        buton.onclick = () => bitince(sporcu);
-        alan.appendChild(buton);
-      });
-
-      return alan;
-    }
-
-    const finalAlani = document.createElement("div");
-    const sonuc = document.createElement("p");
-
-    function finalGuncelle() {
-      finalAlani.replaceChildren();
-      sonuc.textContent = "";
-
-      if (kazananlar.every(Boolean)) {
-        finalAlani.appendChild(macOlustur(
-          "🏆 Final", kazananlar,
-          kazanan => {
-            sonuc.textContent = "🥇 Şampiyon: " + kazanan;
-          }
-        ));
-        finalAlani.appendChild(sonuc);
-      }
-    }
-
-    [[0, 1], [2, 3]].forEach((eslesme, i) => {
-      kutu.appendChild(macOlustur(
-        "Yarı Final " + (i + 1),
-        eslesme.map(n => sporcular[n]),
-        kazanan => {
-          kazananlar[i] = kazanan;
-          finalGuncelle();
-        }
-      ));
-    });
-
-    kutu.appendChild(finalAlani);
-    liste.appendChild(kutu);
-  });
-
-  panel.style.display = "block";
-
-  if (!sayac) {
-    liste.textContent = "Önce 4 sporculu kura oluşturun.";
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const panel = document.getElementById("macPaneli");
-  const buton = document.createElement("button");
-  buton.textContent = "🥋 Yarı Final / Final Oluştur";
-  buton.onclick = maclariOlustur;
-  panel.parentNode.insertBefore(buton, panel);
-});
-</script>
-  
-<div id="madalyaPaneli" class="card" style="display:none">
-  <h2>🏅 Madalya Sıralaması</h2>
-  <div id="madalyaListe"></div>
-</div>
-
-<script>
-function madalyaGoster() {
-  const panel = document.getElementById("madalyaPaneli");
-  const liste = document.getElementById("madalyaListe");
-  const maclar = document.getElementById("macPaneli");
-
-  if (!maclar) {
-    alert("Önce maçları oluşturun.");
-    return;
-  }
-
-  const gruplar = [...maclar.querySelectorAll(".card")];
-  const sonuc = {};
-
-  gruplar.forEach(grup => {
-    const metin = grup.innerText;
-    const eslesme = metin.match(/Şampiyon:\s*(.+)/);
-    if (!eslesme) return;
-
-    const sporcu = eslesme[1].trim();
-    const kulup = sporcu.match(/\(([^)]+)\)/);
-    const ad = kulup ? kulup[1] : "Bilinmeyen Kulüp";
-
-    if (!sonuc[ad]) sonuc[ad] = 0;
-    sonuc[ad]++;
-  });
-
-  liste.replaceChildren();
-
-  Object.entries(sonuc)
-    .sort((a,b) => b[1] - a[1])
-    .forEach(([kulup, altin], i) => {
-      const p = document.createElement("p");
-      p.textContent =
-        (i + 1) + ". " + kulup +
-        " — 🥇 " + altin;
-      liste.appendChild(p);
-    });
-
-  if (!liste.children.length) {
-    liste.textContent = "Henüz tamamlanan final yok.";
-  }
-
-  panel.style.display = "block";
-}
-
-const madalyaButon = document.createElement("button");
-madalyaButon.textContent = "🏅 Madalya Sıralamasını Göster";
-madalyaButon.onclick = madalyaGoster;
-document.getElementById("madalyaPaneli")
-  .before(madalyaButon);
-</script>
-
-<script>
-function tumMadalyalariGoster() {
-  const panel = document.getElementById("madalyaPaneli");
-  if (!panel) return;
-
-  const liste = panel.querySelector("#madalyaListesi");
-  if (!liste) {
-    alert("Madalya listesi bulunamadı.");
-    return;
-  }
-
-  // Mevcut maç sonuçlarını koruyarak
-  // madalya sıralamasını göster.
-  if (typeof madalyaGoster === "function") {
-    madalyaGoster();
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("Madalya sistemi hazır.");
-});
-</script>
-
-
-<script>
-function kuraYazdir() {
-  const bolum = document.querySelector(
-    '#kuraListe'
-  );
-
-  if (!bolum) {
-    alert("Kura listesi bulunamadı.");
-    return;
-  }
-
-  const pencere = window.open("", "_blank");
-  if (!pencere) {
-    alert("Açılır pencerelere izin verin.");
-    return;
-  }
-
-  pencere.document.write(`
-    <html><head><meta charset="UTF-8">
-    <style>
-      @page { size: A4; margin: 12mm; }
-      body { font-family: Arial; }
-      button { display: none; }
-    </style></head>
-    <body>${bolum.outerHTML}</body></html>
-  `);
-  pencere.document.close();
-  pencere.print();
-}
-</script>
-
-<script>
-function eslesmeliKuraYazdir() {
-  const liste = document.getElementById("kuraListe");
-  if (!liste || !liste.children.length) {
-    alert("Önce kuraları oluşturun.");
-    return;
-  }
-
-  
-const pencere = window.open("", "_blank");
-if (pencere) pencere.focus();
-
-  if (!pencere) {
-    alert("Açılır pencerelere izin verin.");
-    return;
-  }
-
-  const temizle = (s) => String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-
-  let sayfalar = "";
-
-  [...liste.children].forEach((grup, index) => {
-    const baslik = grup.querySelector("h3,h4,h2");
-    const sporcular = [...grup.querySelectorAll("li")]
-      .map(x => x.textContent.trim());
-
-    if (!sporcular.length) return;
-
-    const adlar = Array.from(
-      {length: 4},
-      (_, i) => temizle(sporcular[i] || "BAY / Boş")
-    );
-
-    sayfalar += `
-      <section class="sayfa">
-        <h2>İSTANBUL KULÜPLER TURNUVA SİSTEMİ</h2>
-        <h3>${temizle(baslik?.textContent || "Grup " + (index + 1))}</h3>
-        <div class="eslesme">
-          <div class="sporcular">
-            <div>${adlar[0]}</div>
-            <div>${adlar[1]}</div>
-            <div>${adlar[2]}</div>
-            <div>${adlar[3]}</div>
-          </div>
-          <div class="maclar">
-            <div>Yarı Final 1<br>__________</div>
-            <div>Yarı Final 2<br>__________</div>
-          </div>
-          <div class="final">
-            <div>FİNAL<br>__________</div>
-          </div>
-        </div>
-        <h3>ÜÇÜNCÜLÜK MAÇI</h3>
-        <p>Yarı final kaybedenleri:</p>
-        <p>________________ / ________________</p>
-        <p>Şampiyon: ________________________</p>
-      </section>`;
-  });
-
-  if (!sayfalar) {
-    pencere.close();
-    alert("Kura gruplarındaki sporcular okunamadı.");
-    return;
-  }
-
-  pencere.document.write(`
-    <!DOCTYPE html>
-    <html lang="tr"><head>
-    <meta charset="UTF-8">
-    <style>
-      @page { size: A4 portrait; margin: 12mm; }
-      body { font-family: Arial, sans-serif; }
-      .sayfa { break-after: page; padding: 10px; }
-      .sayfa:last-child { break-after: auto; }
-      h2,h3 { text-align: center; }
-      .eslesme {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 45px 0;
-      }
-      .sporcular,.maclar,.final {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-around;
-        min-height: 300px;
-      }
-      .sporcular div,.maclar div,.final div {
-        border: 1px solid #333;
-        padding: 10px 5px;
-        font-size: 11px;
-        overflow-wrap: anywhere;
-      }
-    </style></head>
-    <body>${sayfalar}</body></html>
-  `);
-  
-
-pencere.document.close();
-pencere.onload = function() {
-  pencere.focus();
-  pencere.print();
-};
-
-
-
- 
-}
-</script>
-
-/* Aşağıdaki kodu mevcut son </body> etiketinden hemen önce ekleyin. */
-<script>
-function kuraYazdir() {
-  const liste = document.getElementById('kuraListe');
-  if (!liste || !liste.querySelector('.card')) {
-    alert('Önce kuraları oluşturun.'); return;
-  }
-  document.body.classList.add('kura-yazdir');
-  window.print();
-}
-function eslesmeliKuraYazdir() {
-  const gruplar = [...document.querySelectorAll('#kuraListe > .card')];
-  if (!gruplar.length) { alert('Önce kuraları oluşturun.'); return; }
-  let alan = document.getElementById('eslesmeYazdirAlani');
-  if (!alan) {
-    alan = document.createElement('div');
-    alan.id = 'eslesmeYazdirAlani';
-    document.body.appendChild(alan);
-  }
-  alan.replaceChildren();
-  gruplar.forEach((grup, i) => {
-    const sayfa = document.createElement('div');
-    sayfa.className = 'eslesme-sayfa';
-    const baslik = document.createElement('h2');
-    baslik.textContent = 'İSTANBUL KULÜPLER TURNUVA SİSTEMİ';
-    sayfa.appendChild(baslik);
-    const alt = document.createElement('h3');
-    alt.textContent = grup.querySelector('h3')?.textContent || 'Grup ' + (i+1);
-    sayfa.appendChild(alt);
-    const isimler = [...grup.querySelectorAll('p')].map(p => p.textContent.trim());
-    const tablo = document.createElement('table');
-    tablo.className = 'eslesme-tablo';
-    const baslikSatiri = tablo.insertRow();
-    ['Sporcular','Yarı Final','Final'].forEach(t => {
-      const th = document.createElement('th'); th.textContent = t; baslikSatiri.appendChild(th);
-    });
-    for (let n=0;n<4;n++) {
-      const satir = tablo.insertRow();
-      const sporcu = satir.insertCell();
-      sporcu.textContent = isimler[n] || 'BAY / Boş';
-      const yari = satir.insertCell();
-      yari.textContent = n===0 ? 'Yarı Final 1: __________' : n===2 ? 'Yarı Final 2: __________' : '';
-      const final = satir.insertCell();
-      final.textContent = n===1 ? 'Final: ______________' : '';
-    }
-    sayfa.appendChild(tablo);
-    const not = document.createElement('p');
-    not.textContent = 'Üçüncülük maçı: ____________________    Şampiyon: ____________________';
-    sayfa.appendChild(not);
-    alan.appendChild(sayfa);
-  });
-  document.body.classList.add('eslesme-yazdir');
-  window.print();
-}
-window.addEventListener('afterprint', () => {
-  document.body.classList.remove('kura-yazdir','eslesme-yazdir');
-});
-</script>
-<style>
-#eslesmeYazdirAlani { display:none; }
-@media print {
-  body.kura-yazdir > *, body.eslesme-yazdir > * { display:none !important; }
-  body.kura-yazdir #kura { display:block !important; }
-  body.kura-yazdir #kuraListe { display:block !important; }
-  body.kura-yazdir #kura button { display:none !important; }
-  body.eslesme-yazdir #eslesmeYazdirAlani { display:block !important; }
-  .eslesme-sayfa { break-after:page; page-break-after:always; }
-  .eslesme-sayfa:last-child { break-after:auto; page-break-after:auto; }
-  .eslesme-tablo { width:100%; border-collapse:collapse; margin:25px 0; }
-  .eslesme-tablo td,.eslesme-tablo th { border:1px solid #222; padding:12px 5px; font-size:11px; }
-}
-</style>
-</body> 
-</html>
+window.addEventListener('afterprint',()=>document.body.classList.remove('print-list','print-bracket'));
+weightOptions();categoryEdit();render();show('home');
+</script></body></html>
