@@ -59,7 +59,7 @@
 <section id="draws" class="panel"><div class="card"><h2>Otomatik kura</h2><p>Her kura en fazla 4 sporcudan oluşur. Sporcular yaş grubu, cinsiyet ve kiloya göre ayrılır. Aynı kulüp sporcuları mümkün olduğunca ayrı gruplara dağıtılır.</p><div class="actions"><button onclick="makeDraws()">🎲 Otomatik kura çek</button><button class="secondary" onclick="show('print-area')">Kura listelerini görüntüle</button></div><p class="note">Yeni kura çekmek mevcut maç sonuçlarını siler. İşlemden önce onay alınır.</p></div><div id="drawPreview"></div></section>
 <section id="results" class="panel"><div class="card"><h2>Maç sonuçları</h2><p class="muted">Her eşleşmede kazananı seçin. Final eşleşmesi otomatik oluşur.</p><div id="resultList"></div></div></section>
 <section id="medals" class="panel"><div class="card"><h2>🏅 Madalya sıralaması</h2><div class="tablewrap" id="medalList"></div></div></section>
-<section id="print-area" class="panel"><div class="card"><h2>Yazdırılabilir A4 kura listeleri</h2><div class="actions no-print"><button onclick="showPrintPreview('list')">🖨️ A4 liste / PDF</button><button onclick="showPrintPreview('bracket')">🥋 A4 eşleşmeli çizelge / PDF</button></div><p class="muted">Yukarıdaki düğmelerden liste veya eşleşmeli çizelgeyi A4 önizlemede açın. Çıktılar ayrı sayfalar halinde hazırlanır.</p></div></section><div id="printBracketArea"></div></main><section id="printPreview" aria-label="A4 yazdırma önizlemesi"><div class="print-tools"><button type="button" onclick="closePrintPreview()" class="secondary">← Sisteme dön</button><button type="button" onclick="window.print()">🖨️ Yazdır / PDF kaydet</button><button type="button" onclick="downloadPrintHTML()" class="secondary">📄 A4 dosyasını indir</button><p class="print-help">Yazdırma penceresi açılmazsa tarayıcının menüsünden Paylaş → Yazdır veya Yazdır seçeneğini kullanın. Yazdır menüsünden “PDF olarak kaydet” seçebilirsiniz. “A4 dosyasını indir” seçeneği de yedek çıktı sağlar.</p></div><div class="pages" id="previewPages"></div></section>
+<section id="print-area" class="panel"><div class="card"><h2>Yazdırılabilir A4 kura listeleri</h2><div class="actions no-print"><button onclick="showPrintPreview('list')">🖨️ A4 liste / PDF</button><button onclick="showPrintPreview('bracket')">🥋 A4 eşleşmeli çizelge / PDF</button></div><p class="muted">Yukarıdaki düğmelerden liste veya eşleşmeli çizelgeyi A4 önizlemede açın. Çıktılar ayrı sayfalar halinde hazırlanır.</p></div></section><div id="printBracketArea"></div></main><section id="printPreview" aria-label="A4 yazdırma önizlemesi"><div class="print-tools"><button type="button" onclick="closePrintPreview()" class="secondary">← Sisteme dön</button><button type="button" onclick="downloadPDF()">📄 PDF indir (doğrudan)</button><button type="button" onclick="downloadPrintHTML()" class="secondary">📄 A4 dosyasını indir</button><p class="print-help">Yazdırma penceresi açılmazsa tarayıcının menüsünden Paylaş → Yazdır veya Yazdır seçeneğini kullanın. Yazdır menüsünden “PDF olarak kaydet” seçebilirsiniz. “A4 dosyasını indir” seçeneği de yedek çıktı sağlar.</p></div><div class="pages" id="previewPages"></div></section>
 <script>
 const ages=['Alt Minik','Minik','Yıldız','Genç','Ümit','Büyük'];const base={
  'Alt Minik|Erkek':['25','27','30','33','35','38','41','45','48','51','55','57','+57'],
@@ -169,5 +169,87 @@ function downloadPrintHTML(){
  const link=document.createElement('a');link.href=url;link.download='istanbul-kura-'+printPreviewKind+'-A4.html';document.body.appendChild(link);link.click();link.remove();
  setTimeout(()=>URL.revokeObjectURL(url),3000);
 }
+
+/* Telefondaki yazdırma penceresine ihtiyaç duymadan gerçek A4 PDF oluştur. */
+function downloadPDF(){
+ try{
+  if(!db.draws.length){alert('Önce kura oluşturun.');return}
+  const enc=new TextEncoder(), parts=[], offsets=[0];let total=0;
+  function push(data){const b=typeof data==='string'?enc.encode(data):data;parts.push(b);total+=b.length}
+  function obj(n,head,data,tail){offsets[n]=total;push(n+' 0 obj\n'+head);if(data)push(data);if(tail)push(tail);push('\nendobj\n')}
+  const N=db.draws.length;
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  const kids=db.draws.map((_,i)=>(3+i*3)+' 0 R').join(' ');
+  obj(2,'<< /Type /Pages /Count '+N+' /Kids ['+kids+'] >>');
+  function sheet(d){
+   const c=document.createElement('canvas');c.width=1240;c.height=1754;
+   const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
+   const left=85,right=1155;
+   function txt(t,x,y,size=24,bold=false,color='#17243b',maxWidth=1000){
+    g.fillStyle=color;g.font=(bold?'bold ':'')+size+'px Arial, sans-serif';
+    const words=String(t??'').split(/\s+/), lines=[];let line='';
+    for(const word of words){let candidate=line?line+' '+word:word;if(g.measureText(candidate).width>maxWidth&&line){lines.push(line);line=word}else line=candidate}
+    if(line)lines.push(line);
+    for(let i=0;i<lines.length;i++)g.fillText(lines[i],x,y+i*(size+8));
+    return lines.length*(size+8)
+   }
+   function box(x,y,w,h,title,body,detail){
+    g.fillStyle='#fff';g.fillRect(x,y,w,h);g.strokeStyle='#7c889b';g.lineWidth=2;g.strokeRect(x,y,w,h);
+    g.fillStyle='#bc2035';g.fillRect(x,y,7,h);
+    txt(title,x+19,y+37,23,true,'#17243b',w-37);
+    let z=y+78;z+=txt(body||'—',x+19,z,23,false,'#111827',w-35);
+    if(detail)txt(detail,x+19,Math.min(y+h-45,z+10),17,false,'#526079',w-35);
+   }
+   g.textAlign='center';
+   txt(db.tournament.name||'İstanbul Kulüpler Turnuvası',620,105,40,true,'#122650',1080);
+   txt([db.tournament.date,db.tournament.place].filter(Boolean).join(' • '),620,157,23,false,'#4b5563',1080);
+   txt('Kura '+d.number+' — '+d.key.replaceAll('|',' / ')+' kg',620,205,28,true,'#17243b',1080);
+   g.textAlign='left';
+   if(printPreviewKind==='list'){
+    let y=280;
+    g.fillStyle='#edf2f8';g.fillRect(left,y,right-left,65);
+    txt('NO',left+15,y+41,24,true);txt('SPORCU',left+105,y+41,24,true);txt('KULÜP',left+565,y+41,24,true);
+    y+=65;
+    d.ids.forEach((aid,i)=>{const a=athlete(aid);g.strokeStyle='#cbd5e1';g.strokeRect(left,y,right-left,115);
+      txt(String(i+1),left+17,y+43,25,true);txt(a?.name||'—',left+105,y+43,25,true,'#17243b',415);
+      txt(clubName(a?.club),left+565,y+43,22,false,'#374151',480);y+=115});
+    const m=medals(d);if(m)txt('ALTIN: '+(athlete(m.gold)?.name||'')+'    GÜMÜŞ: '+(athlete(m.silver)?.name||''),left,y+65,23,true);
+   }else{
+    const colW=326, gap=43, x1=left,x2=left+colW+gap,x3=x2+colW+gap;
+    d.ids.forEach((aid,i)=>{const a=athlete(aid);box(x1,285+i*265,colW,220,'SPORCU '+(i+1),a?.name,clubName(a?.club))});
+    const bs=bouts(d),semis=bs.filter(b=>b.key!=='final'),fin=bs.find(b=>b.key==='final');
+    if(semis.length){semis.forEach((b,i)=>box(x2,410+i*430,colW,250,b.label,b.players.map(aid=>athlete(aid)?.name||'—').join(' / '),'Kazanan: '+(athlete(d.semi[b.key])?.name||'—')))}
+    else box(x2,600,colW,230,'YARI FİNAL','Bu kurada yarı final yok','');
+    box(x3,530,colW,270,'FİNAL',fin?fin.players.map(aid=>athlete(aid)?.name||'—').join(' / '):'—','');
+    box(x3,900,colW,220,'ŞAMPİYON',athlete(d.final)?.name||'Henüz belirlenmedi','');
+    const m=medals(d);
+    if(m){txt('🥇 1. '+(athlete(m.gold)?.name||'—'),left,1470,27,true);
+      txt('2. '+(athlete(m.silver)?.name||'—'),left,1525,25);
+      txt('3. '+m.bronze.map(aid=>athlete(aid)?.name||'—').join(' / '),left,1580,25)}
+   }
+   g.strokeStyle='#cbd5e1';g.beginPath();g.moveTo(left,1650);g.lineTo(right,1650);g.stroke();
+   txt('İstanbul Kulüpler Turnuva Sistemi',left,1692,18,false,'#64748b');
+   return c.toDataURL('image/jpeg',0.88).split(',')[1];
+  }
+  function from64(base64){const raw=atob(base64),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out}
+  db.draws.forEach((d,i)=>{
+   const page=3+i*3,img=page+1,stream=page+2,bytes=from64(sheet(d));
+   obj(page,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im'+i+' '+img+' 0 R >> >> /Contents '+stream+' 0 R >>');
+   obj(img,'<< /Type /XObject /Subtype /Image /Width 1240 /Height 1754 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+bytes.length+' >>\nstream\n',bytes,'\nendstream');
+   const drawing='q\n595 0 0 842 0 0 cm\n/Im'+i+' Do\nQ\n';
+   obj(stream,'<< /Length '+enc.encode(drawing).length+' >>\nstream\n'+drawing+'endstream');
+  });
+  const xref=total;
+  push('xref\n0 '+(3+N*3)+'\n0000000000 65535 f \n');
+  for(let j=1;j<3+N*3;j++)push(String(offsets[j]).padStart(10,'0')+' 00000 n \n');
+  push('trailer\n<< /Size '+(3+N*3)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+  const blob=new Blob(parts,{type:'application/pdf'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='istanbul-kura-'+(printPreviewKind==='bracket'?'eslesmeli':'liste')+'-A4.pdf';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+ }catch(e){console.error(e);alert('PDF oluşturulamadı: '+e.message)}
+}
+
 weightOptions();categoryEdit();render();show('home');
 </script></body></html>
