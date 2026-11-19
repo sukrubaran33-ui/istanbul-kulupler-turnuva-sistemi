@@ -4,7 +4,7 @@
 <style>
 :root{font-family:system-ui,Arial,sans-serif;color:#162747;background:#f1f5fa}*{box-sizing:border-box}body{margin:0}header{background:#10254c;color:white;padding:22px 16px}header div,main{max-width:980px;margin:auto}h1{font-size:23px;margin:0}header a{color:white}main{padding:16px}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 12px #20385410}h2{font-size:20px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}input,select{width:100%;font:inherit;padding:12px;border:1px solid #ccd6e4;border-radius:9px}button{cursor:pointer;border:0;border-radius:9px;background:#142d58;color:white;padding:12px 15px;font-size:15px;font-weight:bold;margin:5px 5px 5px 0}.secondary{background:#e5ecf6;color:#142d58}.danger{background:#b91c35}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.hidden{display:none!important}.hint{color:#5d6b80;font-size:13px}.msg{white-space:pre-wrap;border-radius:8px;padding:12px;background:#e8f0fa}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:630px}td,th{text-align:left;padding:10px;border-bottom:1px solid #e4e8ef;font-size:14px}th{background:#f0f3f9}.pill{border-radius:20px;padding:3px 9px;background:#edf1f5;font-size:12px;display:inline-block}
 </style></head><body>
-<header><div><h1>🥋 Online Kulüp ve Sporcu Başvurusu</h1><p>İstanbul Kulüpler Turnuva Sistemi</p><a href="index.html">← Turnuva ana sayfasına dön</a></div></header>
+<header><div><h1>🥋 Online Kulüp ve Sporcu Başvurusu</h1><p>İstanbul Kulüpler Turnuva Sistemi</p></div></header>
 <main>
 <div class="card"><strong>Durum:</strong> <span id="state">Bağlantı kontrol ediliyor…</span><p id="message" class="hint"></p></div>
 <section id="guest" class="card">
@@ -23,7 +23,7 @@
 <div><label for="guestLicense">Lisans numarası (isteğe bağlı)</label><input id="guestLicense" maxlength="100"></div>
 </div>
 <div class="hidden" aria-hidden="true"><label for="guestWebsite">Web sitesi</label><input id="guestWebsite" tabindex="-1" autocomplete="off"></div>
-<button type="submit" id="guestSubmit">Başvuruyu yöneticiye gönder</button>
+<button type="submit" id="guestSubmit">Başvuruyu yöneticiye gönder</button><p id="guestResult" role="status" aria-live="polite" style="display:none;padding:15px;border-radius:10px;font-weight:700;margin:12px 0"></p>
 </form>
 </section>
 <section id="auth" class="card"><details><summary style="font-weight:700;cursor:pointer">Yalnız yönetici girişi</summary>
@@ -90,6 +90,7 @@ function selectedWeight(selectId,otherId){
 
 let api,session=null,profile=null;
 function notify(t){$('message').textContent=t||''}
+function guestNotice(t,ok){const el=$('guestResult');el.style.display='block';el.style.background=ok?'#dcfce7':'#fee2e2';el.style.color=ok?'#14532d':'#991b1b';el.textContent=t;el.scrollIntoView({behavior:'smooth',block:'center'});notify(t)}
 function state(t){$('state').textContent=t}
 function show(id,yes){$(id).classList.toggle('hidden',!yes)}
 function error(err){console.error(err);notify('İşlem başarısız: '+(err?.message||String(err)))}
@@ -121,22 +122,23 @@ $('login').onclick=async()=>{const {error:err}=await api.auth.signInWithPassword
 // Kulüpler için hesap açma zorunluluğu kaldırıldı; yönetici girişi korunuyor.
 $('guestForm').onsubmit=async ev=>{
  ev.preventDefault();
- if(!api){notify('Veritabanına bağlantı kurulamadı.');return}
- if($('guestWebsite').value.trim()){notify('Başvuru doğrulanamadı. Lütfen tekrar deneyin.');return}
+ const form=ev.currentTarget,button=$('guestSubmit');
+ if(!api){guestNotice('Veritabanına bağlantı kurulamadı. Sayfayı yenileyip tekrar deneyin.',false);return}
+ if($('guestWebsite').value.trim()){guestNotice('Başvuru doğrulanamadı. Tekrar deneyin.',false);return}
+ if(!form.reportValidity())return;
  const weight=selectedWeight('guestWeight','guestWeightOther');
- if(!/^\\+?\\d+(?:\\.\\d+)?$/.test(weight)){notify('Kilo kategorisini 30 veya +57 biçiminde yazın.');return}
- const button=$('guestSubmit');button.disabled=true;
- const payload={
-  club_name:$('guestClub').value.trim(),coach_name:$('guestCoach').value.trim(),
-  contact_phone:$('guestPhone').value.trim(),athlete_name:$('guestName').value.trim(),
-  birth_date:$('guestBirth').value,gender:$('guestGender').value,
-  age_group:$('guestAge').value,weight,license:$('guestLicense').value.trim()
- };
+ if(!/^\\+?\\d+(?:\\.\\d+)?$/.test(weight)){guestNotice('Kilo kategorisini kontrol edin.',false);return}
+ const payload={club_name:$('guestClub').value.trim(),coach_name:$('guestCoach').value.trim(),contact_phone:$('guestPhone').value.trim(),athlete_name:$('guestName').value.trim(),birth_date:$('guestBirth').value,gender:$('guestGender').value,age_group:$('guestAge').value,weight,license:$('guestLicense').value.trim()};
+ button.disabled=true;button.textContent='Başvuru gönderiliyor…';
  try{
   const {error:err}=await api.from('guest_athlete_applications').insert(payload);
-  if(err){error(err);return}
-  ev.target.reset();notify('Başvuru alındı. Yönetici incelemesinden sonra kesinleşecektir.');
- }finally{button.disabled=false}
+  if(err)throw err;
+  form.reset();setWeightOptions('guestAge','guestGender','guestWeight','guestWeightOther');
+  guestNotice('✓ BAŞVURU GÖNDERİLDİ. Sporcu yönetici onayı bekliyor.',true);
+ }catch(err){
+  console.error('Misafir başvurusu başarısız',err);
+  guestNotice('BAŞVURU KAYDEDİLEMEDİ: '+(err?.message||'Bağlantı hatası. İnterneti kontrol edin ve tekrar deneyin.'),false);
+ }finally{button.disabled=false;button.textContent='Başvuruyu yöneticiye gönder'}
 };
 $('logout').onclick=async()=>{await api.auth.signOut();profile=null;session=null;await load()};
 $('profileSave').onclick=async()=>{
