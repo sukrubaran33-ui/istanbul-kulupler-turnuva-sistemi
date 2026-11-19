@@ -122,12 +122,12 @@ $('login').onclick=async()=>{const {error:err}=await api.auth.signInWithPassword
 // Kulüpler için hesap açma zorunluluğu kaldırıldı; yönetici girişi korunuyor.
 $('guestForm').onsubmit=async ev=>{
  ev.preventDefault();
- const form=ev.currentTarget,button=$('guestSubmit');
+ const form=ev.currentTarget,button=$('guestSubmit');$('guestResult').style.display='none';
  if(!api){guestNotice('Veritabanına bağlantı kurulamadı. Sayfayı yenileyip tekrar deneyin.',false);return}
  if($('guestWebsite').value.trim()){guestNotice('Başvuru doğrulanamadı. Tekrar deneyin.',false);return}
  if(!form.reportValidity())return;
  const weight=selectedWeight('guestWeight','guestWeightOther');
- if(!/^\\+?\\d+(?:\\.\\d+)?$/.test(weight)){guestNotice('Kilo kategorisini kontrol edin.',false);return}
+ if(!/^\+?\d+(?:\.\d+)?$/.test(weight)){guestNotice('Kilo kategorisini kontrol edin.',false);return}
  const payload={club_name:$('guestClub').value.trim(),coach_name:$('guestCoach').value.trim(),contact_phone:$('guestPhone').value.trim(),athlete_name:$('guestName').value.trim(),birth_date:$('guestBirth').value,gender:$('guestGender').value,age_group:$('guestAge').value,weight,license:$('guestLicense').value.trim()};
  button.disabled=true;button.textContent='Başvuru gönderiliyor…';
  try{
