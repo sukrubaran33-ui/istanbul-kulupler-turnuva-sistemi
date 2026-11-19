@@ -113,7 +113,7 @@ async function load(){
  if(!profile){state('Kulüp bilgilerini kaydedin');return}
  if(!profile.active&&profile.role!=='admin'){state('Kulüp yöneticinin onayını bekliyor');return}
  state(profile.role==='admin'?'Yönetici hesabı aktif':'Kulüp hesabı aktif');
- show('apply',true);show('applications',true);show('admin',profile.role==='admin');
+ show('apply',true);show('applications',true);show('admin',profile.role==='admin');if(profile.role==='admin'&&!document.getElementById('adminDashboardLink')){$('admin').insertAdjacentHTML('afterbegin','<p><a id="adminDashboardLink" href="admin.html" style="display:inline-block;background:#10254c;color:white;padding:14px;border-radius:9px;font-weight:bold">Yönetici Turnuva Panelini Aç</a></p>')}
  await list();
  if(profile.role==='admin')await listGuest();
 }
@@ -122,7 +122,7 @@ $('login').onclick=async()=>{const {error:err}=await api.auth.signInWithPassword
 $('guestForm').onsubmit=async ev=>{
  ev.preventDefault();
  if(!api){notify('Veritabanına bağlantı kurulamadı.');return}
- if($('guestWebsite').value.trim()){notify('Başvurunuz alındı.');return}
+ if($('guestWebsite').value.trim()){notify('Başvuru doğrulanamadı. Lütfen tekrar deneyin.');return}
  const weight=selectedWeight('guestWeight','guestWeightOther');
  if(!/^\\+?\\d+(?:\\.\\d+)?$/.test(weight)){notify('Kilo kategorisini 30 veya +57 biçiminde yazın.');return}
  const button=$('guestSubmit');button.disabled=true;
