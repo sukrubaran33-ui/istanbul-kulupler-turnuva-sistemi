@@ -19,7 +19,7 @@
 <div><label for="guestBirth">Doğum tarihi</label><input id="guestBirth" type="date" required></div>
 <div><label for="guestGender">Cinsiyet</label><select id="guestGender"><option>Erkek</option><option>Bayan</option></select></div>
 <div><label for="guestAge">Yaş grubu</label><select id="guestAge"><option>Alt Minik</option><option>Minik</option><option>Yıldız</option><option>Genç</option><option>Ümit</option><option>Büyük</option></select></div>
-<div><label for="guestWeight">Kilo kategorisi</label><input id="guestWeight" required placeholder="30 veya +57" maxlength="10"></div>
+<div><label for="guestWeight">Kilo kategorisi</label><select id="guestWeight" required></select><input id="guestWeightOther" class="hidden" maxlength="10" placeholder="Kilo kategorisini yazın (ör. +63)" aria-label="Diğer kilo kategorisi"></div>
 <div><label for="guestLicense">Lisans numarası (isteğe bağlı)</label><input id="guestLicense" maxlength="100"></div>
 </div>
 <div class="hidden" aria-hidden="true"><label for="guestWebsite">Web sitesi</label><input id="guestWebsite" tabindex="-1" autocomplete="off"></div>
@@ -36,7 +36,7 @@
 <div><label>Doğum tarihi</label><input id="birth" type="date" required></div>
 <div><label>Cinsiyet</label><select id="gender"><option>Erkek</option><option>Bayan</option></select></div>
 <div><label>Yaş grubu</label><select id="age"><option>Alt Minik</option><option>Minik</option><option>Yıldız</option><option>Genç</option><option>Ümit</option><option>Büyük</option></select></div>
-<div><label>Kilo kategorisi</label><input id="weight" placeholder="Örnek: 30 veya +57" required></div>
+<div><label>Kilo kategorisi</label><select id="weight" required></select><input id="weightOther" class="hidden" maxlength="10" placeholder="Kilo kategorisini yazın (ör. +63)" aria-label="Diğer kilo kategorisi"></div>
 <div><label>Lisans numarası (isteğe bağlı)</label><input id="license"></div>
 </div><button type="submit">Başvuruyu yöneticiye gönder</button></form></section>
 <section id="applications" class="card hidden"><h2>Başvurular</h2><button id="refresh" class="secondary">Yenile</button><div class="scroll" id="table"></div></section>
@@ -48,6 +48,44 @@
 const SUPABASE_URL='https://wdwyirlqgptbprfzleli.supabase.co';
 const SUPABASE_KEY='sb_publishable_pDULKkJ7MWEg-GijQGnLHQ_mcP12FAy';
 const $=id=>document.getElementById(id),e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const ages=['Alt Minik','Minik','Yıldız','Genç','Ümit','Büyük'];const base={
+ 'Alt Minik|Erkek':['25','27','30','33','35','38','41','45','48','51','55','57','+57'],
+ 'Alt Minik|Bayan':['25','27','30','33','35','38','41','45','48','51','55','57','+57'],
+'Minik|Erkek':['30','33','36','40','45','50','57','+57'],'Minik|Bayan':['27','30','33','36','40','45','50','57','+57'],
+'Yıldız|Bayan':['29','33','37','41','44','47','51','55','59','+59'],
+'Genç|Bayan':['42','44','46','49','52','55','59','63','68','+68'],
+'Ümit|Bayan':['46','49','53','57','62','67','73','+73'],'Büyük|Bayan':['46','49','53','57','62','67','73','+73'],
+'Ümit|Erkek':['54','58','63','68','74','80','87','+87'],'Büyük|Erkek':['54','58','63','68','74','80','87','+87']};
+function setWeightOptions(ageId,genderId,weightId,otherId){
+ const select=$(weightId),input=$(otherId);
+ if(!select||!input)return;
+ const vals=base[$(ageId).value+'|'+$(genderId).value]||[];
+ const before=select.value;
+ select.innerHTML='<option value="">Kilo seçiniz</option>'+vals.map(v=>'<option value="'+v+'">'+v+' kg</option>').join('')+'<option value="other">Diğer / listede yok</option>';
+ if(vals.includes(before))select.value=before;
+ else select.value='';
+ input.classList.add('hidden');input.required=false;
+ select.onchange=()=>{
+  const other=select.value==='other';
+  input.classList.toggle('hidden',!other);
+  input.required=other;
+  if(!other)input.value='';
+ };
+}
+function initializeWeightPickers(){
+ for(const [age,gender,weight,other] of [['guestAge','guestGender','guestWeight','guestWeightOther'],['age','gender','weight','weightOther']]){
+  const update=()=>setWeightOptions(age,gender,weight,other);
+  $(age).addEventListener('change',update);
+  $(gender).addEventListener('change',update);
+  update();
+ }
+}
+function selectedWeight(selectId,otherId){
+ const value=$(selectId).value;
+ return value==='other'?$(otherId).value.trim():value;
+}
+
 let api,session=null,profile=null;
 function notify(t){$('message').textContent=t||''}
 function state(t){$('state').textContent=t}
@@ -83,7 +121,7 @@ $('guestForm').onsubmit=async ev=>{
  ev.preventDefault();
  if(!api){notify('Veritabanına bağlantı kurulamadı.');return}
  if($('guestWebsite').value.trim()){notify('Başvurunuz alındı.');return}
- const weight=$('guestWeight').value.trim();
+ const weight=selectedWeight('guestWeight','guestWeightOther');
  if(!/^\\+?\\d+(?:\\.\\d+)?$/.test(weight)){notify('Kilo kategorisini 30 veya +57 biçiminde yazın.');return}
  const button=$('guestSubmit');button.disabled=true;
  const payload={
@@ -107,7 +145,7 @@ $('profileSave').onclick=async()=>{
 };
 $('athleteForm').onsubmit=async ev=>{
  ev.preventDefault();if(!session||!profile?.active){notify('Kulübünüz henüz etkin değil.');return}
- const weight=$('weight').value.trim();if(!/^\+?\d+(?:\.\d+)?$/.test(weight)){notify('Geçerli kilo yazın: 30 veya +57');return}
+ const weight=selectedWeight('weight','weightOther');if(!/^\+?\d+(?:\.\d+)?$/.test(weight)){notify('Geçerli kilo yazın: 30 veya +57');return}
  const {error:err}=await api.from('athlete_applications').insert({user_id:session.user.id,athlete_name:$('athleteName').value.trim(),birth_date:$('birth').value,gender:$('gender').value,age_group:$('age').value,weight,license:$('license').value.trim(),status:'pending'});
  if(err)error(err);else{notify('Sporcu başvurusu yönetici onayına gönderildi.');ev.target.reset();await list()}
 };
@@ -148,5 +186,6 @@ async function reviewGuest(id,status){
 async function del(id){if(!confirm('Bekleyen sporcu başvurusunu silmek istiyor musunuz?'))return;const {error:err}=await api.from('athlete_applications').delete().eq('id',id).eq('status','pending');if(err)error(err);else await list()}
 async function approveClub(id,active){const {error:err}=await api.from('club_profiles').update({active}).eq('user_id',id);if(err)error(err);else await list()}
 async function approveAthlete(id,status){const {error:err}=await api.from('athlete_applications').update({status,updated_at:new Date().toISOString()}).eq('id',id);if(err)error(err);else await list()}
+initializeWeightPickers();
 boot().catch(error);
 </script></body></html>
