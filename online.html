@@ -127,7 +127,7 @@ $('guestForm').onsubmit=async ev=>{
  if($('guestWebsite').value.trim()){guestNotice('Başvuru doğrulanamadı. Tekrar deneyin.',false);return}
  if(!form.reportValidity())return;
  const weight=selectedWeight('guestWeight','guestWeightOther');
- if(!/^\+?\d+(?:\.\d+)?$/.test(weight)){guestNotice('Kilo kategorisini kontrol edin.',false);return}
+ if(!weight || weight==='other'){guestNotice('Lütfen kilo kategorisi seçin.',false);return}
  const payload={club_name:$('guestClub').value.trim(),coach_name:$('guestCoach').value.trim(),contact_phone:$('guestPhone').value.trim(),athlete_name:$('guestName').value.trim(),birth_date:$('guestBirth').value,gender:$('guestGender').value,age_group:$('guestAge').value,weight,license:$('guestLicense').value.trim()};
  button.disabled=true;button.textContent='Başvuru gönderiliyor…';
  try{
