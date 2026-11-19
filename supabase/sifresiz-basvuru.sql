@@ -21,7 +21,7 @@ alter table public.guest_athlete_applications enable row level security;
 
 drop policy if exists guest_submit on public.guest_athlete_applications;
 create policy guest_submit on public.guest_athlete_applications
-for insert to anon with check (status='pending');
+for insert to anon, authenticated with check (status='pending');
 
 drop policy if exists guest_admin_read on public.guest_athlete_applications;
 create policy guest_admin_read on public.guest_athlete_applications
@@ -62,7 +62,7 @@ for each row execute function public.protect_guest_athlete_review();
 revoke all on public.guest_athlete_applications from anon, authenticated;
 -- Sadece kamu formunun ihtiyaç duyduğu kolonlara INSERT izni verilir.
 grant insert (club_name,coach_name,contact_phone,athlete_name,birth_date,gender,age_group,weight,license)
- on public.guest_athlete_applications to anon;
+ on public.guest_athlete_applications to anon, authenticated;
 grant select on public.guest_athlete_applications to authenticated;
 grant update (status) on public.guest_athlete_applications to authenticated;
 revoke all on function public.protect_guest_athlete_review() from public, anon, authenticated;
