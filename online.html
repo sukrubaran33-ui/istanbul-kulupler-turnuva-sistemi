@@ -105,7 +105,7 @@ async function boot(){
 async function load(){
  const managerView=location.hash==='#yonetici';document.body.classList.toggle('manager-view',managerView);
  show('auth',managerView&&!session);show('guest',!managerView);show('account',managerView&&!!session);show('apply',false);show('applications',false);show('admin',false);
- if(!session){state('Giriş yapılmadı');return}
+ if(!session){state(managerView?'Yönetici girişi gerekli':'Şifresiz başvuru formu hazır');return}
  state('Hesap açık');$('who').textContent='E-posta: '+session.user.email;
  const {data, error:err}=await api.from('club_profiles').select('*').eq('user_id',session.user.id).maybeSingle();
  if(err){error(err);state('Veritabanı kurulumu gerekli');return}
