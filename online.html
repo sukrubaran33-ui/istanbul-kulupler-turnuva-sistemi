@@ -26,7 +26,7 @@
 <button type="submit" id="guestSubmit">Başvuruyu yöneticiye gönder</button><p id="guestResult" role="status" aria-live="polite" style="display:none;padding:15px;border-radius:10px;font-weight:700;margin:12px 0"></p>
 </form>
 </section>
-<section id="auth" class="card"><details><summary style="font-weight:700;cursor:pointer">Yalnız yönetici girişi</summary>
+<section id="auth" class="card hidden"><details><summary style="font-weight:700;cursor:pointer">Yalnız yönetici girişi</summary>
 <p class="hint">Yönetici hesabınızı e-posta ve şifrenizle açın. Kulüpler için giriş gerekmiyor.</p>
 <div class="grid"><div><label for="email">Yönetici e-posta</label><input type="email" id="email" autocomplete="email"></div><div><label for="password">Şifre</label><input type="password" id="password" autocomplete="current-password"></div></div>
 <button id="login">Yönetici girişi</button></details></section>
@@ -103,7 +103,8 @@ async function boot(){
  await load();
 }
 async function load(){
- show('auth',!session);show('guest',!session);show('account',!!session);show('apply',false);show('applications',false);show('admin',false);
+ const managerView=location.hash==='#yonetici';
+ show('auth',managerView&&!session);show('guest',!managerView);show('account',managerView&&!!session);show('apply',false);show('applications',false);show('admin',false);
  if(!session){state('Giriş yapılmadı');return}
  state('Hesap açık');$('who').textContent='E-posta: '+session.user.email;
  const {data, error:err}=await api.from('club_profiles').select('*').eq('user_id',session.user.id).maybeSingle();
@@ -114,9 +115,9 @@ async function load(){
  if(!profile){state('Kulüp bilgilerini kaydedin');return}
  if(!profile.active&&profile.role!=='admin'){state('Kulüp yöneticinin onayını bekliyor');return}
  state(profile.role==='admin'?'Yönetici hesabı aktif':'Kulüp hesabı aktif');
- show('apply',true);show('applications',true);show('admin',profile.role==='admin');if(profile.role==='admin'&&!document.getElementById('adminDashboardLink')){$('admin').insertAdjacentHTML('afterbegin','<p><a id="adminDashboardLink" href="admin.html" style="display:inline-block;background:#10254c;color:white;padding:14px;border-radius:9px;font-weight:bold">Yönetici Turnuva Panelini Aç</a></p>')}
- await list();
- if(profile.role==='admin')await listGuest();
+ show('apply',managerView);show('applications',managerView);show('admin',managerView&&profile.role==='admin');if(profile.role==='admin'&&!document.getElementById('adminDashboardLink')){$('admin').insertAdjacentHTML('afterbegin','<p><a id="adminDashboardLink" href="admin.html" style="display:inline-block;background:#10254c;color:white;padding:14px;border-radius:9px;font-weight:bold">Yönetici Turnuva Panelini Aç</a></p>')}
+ if(managerView)await list();
+ if(managerView&&profile.role==='admin')await listGuest();
 }
 $('login').onclick=async()=>{const {error:err}=await api.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(err)error(err);else notify('Giriş yapıldı')};
 // Kulüpler için hesap açma zorunluluğu kaldırıldı; yönetici girişi korunuyor.
@@ -191,5 +192,6 @@ async function del(id){if(!confirm('Bekleyen sporcu başvurusunu silmek istiyor 
 async function approveClub(id,active){const {error:err}=await api.from('club_profiles').update({active}).eq('user_id',id);if(err)error(err);else await list()}
 async function approveAthlete(id,status){const {error:err}=await api.from('athlete_applications').update({status,updated_at:new Date().toISOString()}).eq('id',id);if(err)error(err);else await list()}
 initializeWeightPickers();
+window.addEventListener('hashchange',()=>{if(api)load().catch(error)});
 boot().catch(error);
 </script></body></html>
