@@ -1,0 +1,348 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>İstanbul Kulüpler Sistemi</title><style>
+:root{font-family:system-ui,Arial;color:#17243b;background:#f2f5fa}*{box-sizing:border-box}body{margin:0}header{background:#10254c;color:white;padding:20px}h1{font-size:23px;margin:0}header p{margin:5px 0;color:#dbe6fa}.wrap{max-width:1100px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 20px}.tabs button{background:white;color:#10254c}.tabs button.active{background:#bc2035;color:white}.panel{display:none}.panel.active{display:block}.card{background:white;border-radius:14px;padding:18px;margin:12px 0;box-shadow:0 2px 12px #162b4814}h2{margin:0 0 12px;font-size:20px}label{display:block;font-size:13px;font-weight:650;margin:10px 0 4px}input,select,textarea{width:100%;padding:11px;border:1px solid #c9d3e0;border-radius:9px;font:inherit}button{border:0;border-radius:9px;padding:11px 15px;background:#142d58;color:white;font-weight:700;cursor:pointer}button.secondary{background:#e6ecf5;color:#132d56}button.danger{background:#bc2035}button.gold{background:#bd8621}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.muted{color:#66758b;font-size:13px}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:580px}th,td{border-bottom:1px solid #e2e8f0;text-align:left;padding:10px;font-size:14px}th{background:#eef2f8}.pill{display:inline-block;background:#eef2f8;border-radius:100px;padding:4px 9px;font-size:12px}.bracket{border:2px solid #dbe4ef;border-radius:12px;padding:16px;margin:15px 0;break-inside:avoid}.match{border-left:4px solid #bd8621;padding:8px 12px;background:#f6f8fb;margin:7px 0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.stat{font-size:28px;font-weight:800;color:#bc2035}.note{padding:12px;background:#fff6e6;border-radius:8px;color:#674b18}.hide{display:none!important}@media print{header,.tabs,.no-print,button,form,.muted{display:none!important}body{background:white}.wrap{max-width:none;padding:0}.panel{display:none!important}#print-area{display:block!important}.card{box-shadow:none;border:0;padding:0}.bracket{page-break-inside:avoid}h1,h2{color:black}}
+
+</style><style>
+#printBracketArea{display:none}
+@media print{
+ body.print-bracket #print-area{display:none!important}
+ body.print-bracket #printBracketArea{display:block!important}
+ body.print-list #print-area{display:block!important}
+ body.print-list #printBracketArea{display:none!important}
+ #printBracketArea .sheet{break-after:page;page-break-after:always;break-inside:avoid;padding:4mm 0}
+ #printBracketArea .sheet:last-child{break-after:auto;page-break-after:auto}
+ #printBracketArea .sheet h2{text-align:center;font-size:17px}
+ #printBracketArea .sheet h3{text-align:center;font-size:14px}
+ #printBracketArea .draw-table{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;margin-top:12mm}
+ #printBracketArea .draw-table td,#printBracketArea .draw-table th{border:1px solid #555;padding:12px 5px;font-size:11px;overflow-wrap:anywhere;height:22mm}
+ #printBracketArea .draw-table th{background:#eee!important}
+ #printBracketArea .foot{margin-top:12mm;font-size:12px}
+}
+
+/* Yazdırma önizlemesi: telefonlarda boşta kalan window.print yerine görünür sayfa */
+#printPreview{display:none;position:fixed;inset:0;z-index:1000;background:#edf1f6;overflow:auto;padding:14px}
+#printPreview.open{display:block}
+#printPreview .print-tools{max-width:940px;margin:0 auto 14px;background:#fff;border-radius:12px;padding:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#printPreview .print-tools button{font-size:14px}
+#printPreview .print-help{font-size:13px;color:#4b5870;flex-basis:100%;margin:4px 0 0}
+#printPreview .pages{max-width:940px;margin:0 auto}
+#printPreview .page{background:#fff;color:#111;border:1px solid #d5dbe5;padding:16mm 12mm;margin:0 auto 14px;min-height:250mm;box-shadow:0 2px 8px #0001;break-after:page;page-break-after:always}
+#printPreview .page:last-child{break-after:auto;page-break-after:auto}
+@media(max-width:650px){#printPreview{padding:6px}#printPreview .page{padding:9mm 5mm;min-height:0}#printPreview .draw-row{gap:4px;grid-template-columns:1fr 1fr 1fr}#printPreview .draw-col .slot{font-size:10px;padding:5px 3px;min-height:48px}#printPreview td,#printPreview th{font-size:10px;padding:5px 3px}}
+#printPreview h2{text-align:center;font-size:19px;margin:0 0 6px}
+#printPreview .sub{text-align:center;font-size:13px;margin:0 0 18px;color:#444}
+#printPreview table{min-width:0;width:100%;border-collapse:collapse;table-layout:fixed}
+#printPreview th,#printPreview td{border:1px solid #888;padding:8px 5px;font-size:12px;overflow-wrap:anywhere;vertical-align:middle}
+#printPreview th{background:#f0f2f5}
+#printPreview .draw-row{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:10px;min-height:220px}
+#printPreview .draw-col{display:flex;flex-direction:column;gap:12px}
+#printPreview .draw-col .slot{border:1px solid #64748b;border-left:4px solid #bd8621;padding:10px 6px;min-height:64px;font-size:12px;overflow-wrap:anywhere}
+#printPreview .draw-col .slot strong{display:block;font-size:11px;margin-bottom:6px;color:#374151}
+#printPreview .draw-col .slot + .slot{margin-top:8px}
+#printPreview .medal-line{margin-top:20px;padding-top:10px;border-top:1px solid #bbb;font-size:12px;line-height:1.8}
+@page{size:A4 portrait;margin:10mm}
+@media print{
+  body{background:white!important}
+  body > header,body > main{display:none!important}
+  #printPreview,#printPreview.open{position:static!important;display:block!important;inset:auto!important;overflow:visible!important;padding:0!important;background:white!important}
+  #printPreview .print-tools{display:none!important}
+  #printPreview .pages{max-width:none!important}
+  #printPreview .page{min-height:auto!important;border:0!important;box-shadow:none!important;padding:3mm 0!important;margin:0!important;break-after:page;page-break-after:always}
+  #printPreview .page:last-child{break-after:auto;page-break-after:auto}
+  #printPreview .draw-col .slot{font-size:11px!important;padding:7px 5px!important;min-height:55px!important}
+  #printPreview table{width:100%!important;min-width:0!important}
+  #printPreview .draw-row{min-height:200px}
+}
+</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><style id="access-gate">body{visibility:hidden}</style><script>
+(async function(){
+ const login='online.html';
+ try{
+  if(!window.supabase)throw Error('Bağlantı yüklenemedi');
+  const c=window.supabase.createClient('https://wdwyirlqgptbprfzleli.supabase.co','sb_publishable_pDULKkJ7MWEg-GijQGnLHQ_mcP12FAy');
+  const {data:{session},error}=await c.auth.getSession();
+  if(error||!session)throw Error('Oturum yok');
+  const {data:profile,error:pe}=await c.from('club_profiles').select('role').eq('user_id',session.user.id).maybeSingle();
+  if(pe||profile?.role!=='admin')throw Error('Yönetici yetkisi gerekli');
+  document.getElementById('access-gate').remove();
+ }catch(e){location.replace(login+'#yonetici');}
+})();
+</script></head><body><header><div class="wrap"><h1>🏆 İSTANBUL KULÜPLER SİSTEMİ</h1><p>Taekwondo • Sporcu Başvurusu • Otomatik Kura • Maç Sonuçları</p></div></header><main class="wrap"><nav class="tabs no-print" id="tabs"></nav><div id="home" class="panel active"><div class="grid" id="stats"></div><div class="card"><h2>Turnuva bilgileri</h2><div class="grid"><div><label>Turnuva adı</label><input id="tname" placeholder="İstanbul Kulüpler Turnuvası"></div><div><label>Turnuva tarihi</label><input type="date" id="tdate"></div><div><label>Turnuva yeri</label><input id="tplace" placeholder="İstanbul"></div></div><div class="actions"><button onclick="saveTournament()">Turnuvayı kaydet</button><a href="online.html" style="display:inline-block;background:#bc2035;color:white;padding:11px 15px;border-radius:9px;font-weight:700;text-decoration:none">🏢 Online kulüp / yönetici girişi</a><button type="button" onclick="syncApprovedAthletes()" class="secondary">✅ Onaylı sporcuları aktar</button><button class="secondary" onclick="exportData()">Verileri yedekle (JSON)</button><label style="margin:0"><input type="file" id="import" accept="application/json" style="max-width:220px" onchange="importData(event)">Yedeği geri yükle</label></div><p class="note">Bu sürüm verileri kullandığınız tarayıcıda saklar. Tarayıcı verileri silinirse kayıtlar kaybolabilir; düzenli yedek alın. Kulüplerin farklı cihazlardan ortak kayıt yapması henüz desteklenmez.</p></div></div>
+<section id="clubs" class="panel"><div class="card"><h2>Kulüp kaydı</h2><form id="clubForm"><div class="grid"><div><label>Kulüp adı</label><input id="cname" required></div><div><label>Antrenör</label><input id="ccoach" required></div><div><label>Telefon</label><input id="cphone" type="tel"></div><div><label>İl / ilçe</label><input id="ccity" placeholder="İstanbul / Fatih"></div></div><div class="actions"><button>Kulüp ekle</button></div></form></div><div class="card"><h2>Kulüpler</h2><div class="tablewrap" id="clubList"></div></div></section>
+<section id="athletes" class="panel"><div class="card"><h2>Sporcu başvurusu</h2><form id="athleteForm"><div class="grid"><div><label>Ad soyad</label><input id="aname" required></div><div><label>Doğum tarihi</label><input type="date" id="abirth" required></div><div><label>Cinsiyet</label><select id="agender"><option>Erkek</option><option>Bayan</option></select></div><div><label>Yaş grubu</label><select id="aage"></select></div><div><label>Kilo kategorisi</label><select id="aweight"></select></div><div><label>Kulüp</label><select id="aclub" required></select></div><div><label>Lisans numarası (isteğe bağlı)</label><input id="alicense"></div></div><div class="actions"><button id="athleteSubmitButton">Başvuruyu kaydet</button><button type="button" class="secondary hide" id="cancelAthleteEdit" onclick="cancelEditAthlete()">Düzenlemeyi iptal et</button></div></form><p class="muted">Yaş ve kilo seçenekleri başlangıç şablonudur. Turnuvanın resmî talimatına göre kategorileri kontrol edin.</p></div><div class="card"><h2>Sporcu listesi</h2><input id="asearch" placeholder="Sporcu ara..." oninput="render()"><div class="tablewrap" id="athleteList"></div></div></section>
+<section id="categories" class="panel"><div class="card"><h2>Yaş ve kilo kategorileri</h2><p>Yaş grupları: Alt Minik, Minik, Yıldız, Genç, Ümit, Büyük. 2026 doğum yılı şablonu: Minik 2014–2016, Yıldız 2012–2014, Genç 2009–2011, Ümit 2006–2010, Büyük 2009 ve öncesi. Alt Minik yönetici tarafından belirlenir.</p><p class="note">Görselde bazı erkek kilo değerleri eksik olduğundan sistemde bunlar başlangıçta tanımlı değildir. Her kategorinin kilolarını aşağıdan düzenleyin.</p><div class="grid"><div><label>Yaş grubu</label><select id="kage"></select></div><div><label>Cinsiyet</label><select id="kgender"><option>Erkek</option><option>Bayan</option></select></div></div><label>Virgülle ayrılmış kilo kategorileri (örnek: 30,33,36,+57)</label><textarea id="kvalues" rows="3"></textarea><div class="actions"><button onclick="saveWeights()">Kiloları kaydet</button></div></div></section>
+<section id="draws" class="panel"><div class="card"><h2>Otomatik kura</h2><p>Her kura en fazla 4 sporcudan oluşur. Sporcular yaş grubu, cinsiyet ve kiloya göre ayrılır. Aynı kulüp sporcuları mümkün olduğunca ayrı gruplara dağıtılır.</p><div class="actions"><button onclick="makeNewDraws()">🎲 Yeni sporculara kura çek</button><button type="button" class="danger" onclick="makeDraws()">⚠️ Tüm kuraları sıfırdan çek</button><button class="secondary" onclick="show('print-area')">Kura listelerini görüntüle</button></div><p class="note">Yeni sporculara kura çek, mevcut kura ve maç sonuçlarını korur. “Tüm kuraları sıfırdan çek” ise yalnız onayınızla eski sonuçları siler.</p></div><div id="drawPreview"></div></section>
+<section id="results" class="panel"><div class="card"><h2>Maç sonuçları</h2><p class="muted">Her eşleşmede kazananı seçin. Final eşleşmesi otomatik oluşur.</p><div id="resultList"></div></div></section>
+<section id="medals" class="panel"><div class="card"><h2>🏅 Madalya sıralaması</h2><div class="tablewrap" id="medalList"></div></div></section>
+<section id="print-area" class="panel"><div class="card"><h2>Yazdırılabilir A4 kura listeleri</h2><div class="actions no-print"><button onclick="showPrintPreview('list')">🖨️ A4 liste / PDF</button><button onclick="showPrintPreview('bracket')">🥋 A4 eşleşmeli çizelge / PDF</button></div><p class="muted">Yukarıdaki düğmelerden liste veya eşleşmeli çizelgeyi A4 önizlemede açın. Çıktılar ayrı sayfalar halinde hazırlanır.</p></div></section><div id="printBracketArea"></div></main><section id="printPreview" aria-label="A4 yazdırma önizlemesi"><div class="print-tools"><button type="button" onclick="closePrintPreview()" class="secondary">← Sisteme dön</button><button type="button" onclick="downloadPDF()">📄 PDF indir (doğrudan)</button><button type="button" onclick="downloadPrintHTML()" class="secondary">📄 A4 dosyasını indir</button><p class="print-help">Yazdırma penceresi açılmazsa tarayıcının menüsünden Paylaş → Yazdır veya Yazdır seçeneğini kullanın. Yazdır menüsünden “PDF olarak kaydet” seçebilirsiniz. “A4 dosyasını indir” seçeneği de yedek çıktı sağlar.</p></div><div class="pages" id="previewPages"></div></section>
+<script>
+const ages=['Alt Minik','Minik','Yıldız','Genç','Ümit','Büyük'];const base={
+ 'Alt Minik|Erkek':['25','27','30','33','35','38','41','45','48','51','55','57','+57'],
+ 'Alt Minik|Bayan':['25','27','30','33','35','38','41','45','48','51','55','57','+57'],
+'Minik|Erkek':['30','33','36','40','45','50','57','+57'],'Minik|Bayan':['27','30','33','36','40','45','50','57','+57'],
+'Yıldız|Erkek':['33','37','41','45','49','53','57','61','65','+65'],
+'Yıldız|Bayan':['29','33','37','41','44','47','51','55','59','+59'],
+'Genç|Erkek':['45','48','51','55','59','63','68','73','78','+78'],
+'Genç|Bayan':['42','44','46','49','52','55','59','63','68','+68'],
+'Ümit|Bayan':['46','49','53','57','62','67','73','+73'],'Büyük|Bayan':['46','49','53','57','62','67','73','+73'],
+'Ümit|Erkek':['54','58','63','68','74','80','87','+87'],'Büyük|Erkek':['54','58','63','68','74','80','87','+87']};
+let db;try{db=JSON.parse(localStorage.getItem('istanbulKulupV1'))}catch(e){}if(!db||!Array.isArray(db.clubs)||!Array.isArray(db.athletes))db={clubs:[],athletes:[],draws:[],weights:base,tournament:{name:'İstanbul Kulüpler Turnuvası',date:'',place:'İstanbul'}};db.weights ||= structuredClone(base);for(const [k,v] of Object.entries(base)){if(!Array.isArray(db.weights[k])||db.weights[k].length===0)db.weights[k]=[...v]}db.draws ||= [];
+const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const save=()=>localStorage.setItem('istanbulKulupV1',JSON.stringify(db));const id=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random();const clubName=x=>db.clubs.find(c=>c.id===x)?.name||'—';const athlete=x=>db.athletes.find(a=>a.id===x);const athleteName=x=>esc(athlete(x)?.name||'—');
+const nav=[['home','Ana Sayfa'],['clubs','Kulüpler'],['athletes','Sporcu Başvurusu'],['categories','Kilolar'],['draws','Otomatik Kura'],['results','Maç Sonuçları'],['medals','Madalyalar'],['print-area','A4 Yazdır']];$('tabs').innerHTML=nav.map(([k,n])=>`<button data-tab="${k}" onclick="show('${k}')">${n}</button>`).join('');function show(k){document.querySelectorAll('.panel').forEach(e=>e.classList.toggle('active',e.id===k));document.querySelectorAll('[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===k));render();scrollTo(0,0)}
+function options(id,vals){$(id).innerHTML=vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')};options('aage',ages);options('kage',ages);function weightOptions(){let vals=db.weights[$('aage').value+'|'+$('agender').value]||[];options('aweight',vals.length?vals:['Tanımlanmadı'])}function categoryEdit(){let v=db.weights[$('kage').value+'|'+$('kgender').value]||[];$('kvalues').value=v.join(', ')}$('aage').onchange=weightOptions;$('agender').onchange=weightOptions;$('kage').onchange=categoryEdit;$('kgender').onchange=categoryEdit;function saveWeights(){let v=$('kvalues').value.split(',').map(x=>x.trim()).filter(Boolean);if(v.some(x=>!/^\+?\d+(?:\.\d+)?$/.test(x))){alert('Kiloları örnekteki gibi yazın.');return}db.weights[$('kage').value+'|'+$('kgender').value]=[...new Set(v)];save();weightOptions();alert('Kategoriler kaydedildi')}
+$('clubForm').onsubmit=e=>{e.preventDefault();let name=$('cname').value.trim();if(db.clubs.some(c=>c.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'))){alert('Bu kulüp zaten kayıtlı');return}db.clubs.push({id:id(),name,coach:$('ccoach').value.trim(),phone:$('cphone').value.trim(),city:$('ccity').value.trim()});save();e.target.reset();render()};
+let editingAthleteId=null;
+$('athleteForm').onsubmit=e=>{e.preventDefault();let name=$('aname').value.trim(),birth=$('abirth').value,club=$('aclub').value,age=$('aage').value,gender=$('agender').value,weight=$('aweight').value;if(!club||weight==='Tanımlanmadı'){alert('Önce kulüp ve geçerli kilo kategorisi seçin.');return}let year=Number(birth.slice(0,4)),ranges={Minik:[2014,2016],Yıldız:[2012,2014],Genç:[2009,2011],Ümit:[2006,2010],Büyük:[0,2009]};let r=ranges[age];if(r&&db.tournament.date?.startsWith('2026')&&!(year>=r[0]&&year<=r[1])){alert('2026 için seçilen yaş grubuyla doğum yılı uyuşmuyor.');return}if(db.athletes.some(a=>a.id!==editingAthleteId&&a.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr')&&a.birth===birth)){alert('Bu sporcu zaten kayıtlı');return}if(editingAthleteId){
+ const existing=db.athletes.find(a=>a.id===editingAthleteId);
+ if(!existing){alert('Düzenlenecek sporcu bulunamadı.');return}
+ if(db.athletes.some(a=>a.id!==editingAthleteId&&a.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr')&&a.birth===birth)){alert('Bu sporcu zaten kayıtlı');return}
+ const inDraw=db.draws.some(d=>d.ids.includes(editingAthleteId));
+ if(inDraw&&!confirm('Bu sporcu kurada yer alıyor. Değişiklikten sonra mevcut kuralar ve sonuçlar sıfırlanacak. Devam edilsin mi?'))return;
+ Object.assign(existing,{name,birth,club,age,gender,weight,license:$('alicense').value.trim()});
+ if(inDraw)db.draws=[];
+ save();cancelEditAthlete();render();alert('Sporcu güncellendi');return;
+ }
+ db.athletes.push({id:id(),name,birth,club,age,gender,weight,license:$('alicense').value.trim()});save();e.target.reset();weightOptions();render();alert('Sporcu başvurusu kaydedildi')};
+function saveTournament(){db.tournament={name:$('tname').value.trim(),date:$('tdate').value,place:$('tplace').value.trim()};save();alert('Turnuva kaydedildi')}
+function editAthlete(aid){
+ const a=db.athletes.find(x=>x.id===aid);if(!a)return;
+ editingAthleteId=aid;
+ $('aname').value=a.name;$('abirth').value=a.birth;$('agender').value=a.gender;
+ $('aage').value=a.age;weightOptions();$('aweight').value=a.weight;
+ $('aclub').value=a.club;$('alicense').value=a.license||'';
+ $('athleteSubmitButton').textContent='Değişiklikleri kaydet';
+ $('cancelAthleteEdit').classList.remove('hide');
+ $('athleteForm').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function cancelEditAthlete(){
+ editingAthleteId=null;$('athleteForm').reset();weightOptions();
+ $('athleteSubmitButton').textContent='Başvuruyu kaydet';
+ $('cancelAthleteEdit').classList.add('hide');
+}
+function removeAthlete(aid){
+ const a=db.athletes.find(x=>x.id===aid);if(!a)return;
+ const inDraw=db.draws.some(d=>d.ids.includes(aid));
+ const message=inDraw?'"'+a.name+'" silinsin mi? Sporcu mevcut kurada bulunduğu için bütün kuralar ve maç sonuçları sıfırlanacak.':'"'+a.name+'" adlı sporcuyu kalıcı olarak silmek istiyor musunuz?';
+ if(!confirm(message))return;
+ db.athletes=db.athletes.filter(x=>x.id!==aid);
+ if(inDraw)db.draws=[];
+ if(editingAthleteId===aid)cancelEditAthlete();
+ save();render();
+}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function spread(group){let shuffled=shuffle(group),chunks=Array.from({length:Math.ceil(group.length/4)},()=>[]);for(let a of shuffled){let choices=chunks.filter(c=>c.length<4),min=Math.min(...choices.map(c=>c.filter(x=>x.club===a.club).length));choices=choices.filter(c=>c.filter(x=>x.club===a.club).length===min);let least=Math.min(...choices.map(c=>c.length));choices=choices.filter(c=>c.length===least);shuffle(choices)[0].push(a)}return chunks}
+function makeNewDraws(){
+ const already=new Set(db.draws.flatMap(d=>d.ids));
+ const fresh=db.athletes.filter(a=>!already.has(a.id));
+ if(!fresh.length){alert('Henüz kuraya katılmamış yeni sporcu yok. Eski kura ve sonuçlar korundu.');return}
+ const groups={};
+ for(const a of fresh){
+   const k=[a.age,a.gender,a.weight].join('|');
+   (groups[k]??=[]).push(a);
+ }
+ let next=db.draws.reduce((max,d)=>Math.max(max,Number(d.number)||0),0)+1;
+ let count=0;
+ for(const key of Object.keys(groups).sort()){
+   for(const chunk of spread(groups[key])){
+     db.draws.push({id:id(),number:next++,key,ids:chunk.map(a=>a.id),semi:{},final:null});
+     count++;
+   }
+ }
+ save();render();
+ alert(count+' yeni kura, '+fresh.length+' yeni sporcu için oluşturuldu. Eski kuralar ve maç sonuçları korundu.');
+}
+function makeDraws(){if(db.draws.length&&!confirm('Mevcut kuralar ve bütün maç sonuçları silinip yeniden çekilecek. Emin misiniz?'))return;let groups={};for(let a of db.athletes){let k=[a.age,a.gender,a.weight].join('|');(groups[k]??=[]).push(a)}db.draws=[];let n=1;for(let key of Object.keys(groups).sort()){for(let chunk of spread(groups[key])){db.draws.push({id:id(),number:n++,key,ids:chunk.map(x=>x.id),semi:{},final:null})}}save();render();alert(db.draws.length+' kura oluşturuldu')}
+function bouts(d){let a=d.ids;if(a.length===1)return [];if(a.length===2)return [{key:'final',label:'Final',players:a}];if(a.length===3){let s=d.semi['s1'];return [{key:'s1',label:'Yarı final',players:[a[1],a[2]]},{key:'final',label:'Final',players:[a[0],s].filter(Boolean)}]}let s1=d.semi.s1,s2=d.semi.s2;return [{key:'s1',label:'1. Yarı final',players:[a[0],a[1]]},{key:'s2',label:'2. Yarı final',players:[a[2],a[3]]},{key:'final',label:'Final',players:[s1,s2].filter(Boolean)}]}
+function setWinner(di,key,w){let d=db.draws[di],b=bouts(d).find(x=>x.key===key);if(!b||b.players.length!==2||!b.players.includes(w))return;if(key==='final')d.final=w;else{d.semi[key]=w;d.final=null}save();render()}
+function medals(d){let a=d.ids;if(a.length<2||!d.final)return null;let b=bouts(d).find(x=>x.key==='final');if(b.players.length!==2)return null;let silver=b.players.find(x=>x!==d.final);let bronze=[];if(a.length===3)bronze=[a[1],a[2]].filter(x=>x!==d.semi.s1);if(a.length===4)bronze=[a[0],a[1]].filter(x=>x!==d.semi.s1).concat([a[2],a[3]].filter(x=>x!==d.semi.s2));return {gold:d.final,silver,bronze}}
+function render(){let t=db.tournament;$('tname').value=t.name||'';$('tdate').value=t.date||'';$('tplace').value=t.place||'';options('aclub',db.clubs.map(c=>c.id));$('aclub').innerHTML=db.clubs.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');$('stats').innerHTML=[['Kulüp',db.clubs.length],['Sporcu',db.athletes.length],['Kura',db.draws.length],['Tamamlanan kura',db.draws.filter(d=>d.final).length]].map(([a,b])=>`<div class="card"><div class="stat">${b}</div><b>${a}</b></div>`).join('');$('clubList').innerHTML='<table><tr><th>Kulüp</th><th>Antrenör</th><th>İlçe</th><th>Sporcu</th></tr>'+db.clubs.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.coach)}</td><td>${esc(c.city)}</td><td>${db.athletes.filter(a=>a.club===c.id).length}</td></tr>`).join('')+'</table>';let q=$('asearch').value.toLocaleLowerCase('tr');$('athleteList').innerHTML='<table><tr><th>Ad soyad</th><th>Kulüp</th><th>Kategori</th><th>Kilo</th><th>İşlem</th></tr>'+db.athletes.filter(a=>a.name.toLocaleLowerCase('tr').includes(q)).map(a=>`<tr><td>${esc(a.name)}</td><td>${esc(clubName(a.club))}</td><td>${esc(a.age)} / ${esc(a.gender)}</td><td>${esc(a.weight)} kg</td><td><button class="secondary" onclick="editAthlete('${a.id}')">Düzenle</button> <button class="danger" onclick="removeAthlete('${a.id}')">Sil</button></td></tr>`).join('')+'</table>';
+let html=db.draws.map((d,i)=>{let bs=bouts(d),m=medals(d);return `<div class="bracket"><h3>Kura ${d.number} — ${esc(d.key.replaceAll('|',' / '))} kg</h3>${d.ids.map(x=>`<div>${athleteName(x)} <small>(${esc(clubName(athlete(x)?.club))})</small></div>`).join('')}${d.ids.length===1?'<p class="pill">Rakip bekliyor</p>':''}${bs.map(b=>`<div class="match"><b>${b.label}</b><div>${b.players.map(x=>athleteName(x)).join(' — ')}${b.players.length===1?' (rakip bekleniyor)':''}</div>${b.players.length===2?`<div class="actions no-print">${b.players.map(x=>`<button class="${(b.key==='final'?d.final:d.semi[b.key])===x?'gold':'secondary'}" onclick="setWinner(${i},'${b.key}','${x}')">${athleteName(x)} kazandı</button>`).join('')}</div>`:''}</div>`).join('')}${m?`<p><b>🥇 ${athleteName(m.gold)}　🥈 ${athleteName(m.silver)}　🥉 ${m.bronze.map(athleteName).join(' / ')}</b></p>`:''}</div>`}).join('');$('drawPreview').innerHTML=html||'<div class="card">Henüz kura oluşturulmadı.</div>';$('resultList').innerHTML=html||'Önce kura çekin.';let scores={};for(let d of db.draws){let m=medals(d);if(!m)continue;for(let [type,ids] of [['gold',[m.gold]],['silver',[m.silver]],['bronze',m.bronze]])for(let aid of ids){let c=athlete(aid)?.club;if(!c)continue;(scores[c]??={gold:0,silver:0,bronze:0})[type]++}}$('medalList').innerHTML='<table><tr><th>Kulüp</th><th>🥇</th><th>🥈</th><th>🥉</th></tr>'+Object.entries(scores).sort((a,b)=>b[1].gold-a[1].gold||b[1].silver-a[1].silver||b[1].bronze-a[1].bronze).map(([c,s])=>`<tr><td>${esc(clubName(c))}</td><td>${s.gold}</td><td>${s.silver}</td><td>${s.bronze}</td></tr>`).join('')+'</table>'}
+function exportData(){let b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download='istanbul-kulupler-yedek.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.clubs)||!Array.isArray(x.athletes)||!Array.isArray(x.draws))throw Error();if(!confirm('Mevcut kayıtlar yedek dosyasıyla değiştirilsin mi?'))return;db=x;save();render();alert('Yedek yüklendi')}catch{alert('Geçersiz yedek dosyası')}};r.readAsText(f)}
+// A4 çıktıları önce ayrı ve görünür bir önizleme olarak oluşturulur.
+// Mobil tarayıcının yazdırma API'si desteklenmese de çıktı ekranda kalır.
+let printPreviewKind='list';
+function printInfo(d){
+ const label='Kura '+d.number+' — '+d.key.replaceAll('|',' / ')+' kg';
+ const title=esc(db.tournament.name||'İstanbul Kulüpler Turnuvası');
+ const info=esc([db.tournament.date,db.tournament.place].filter(Boolean).join(' — '));
+ return `<h2>${title}</h2><p class="sub">${info}<br>${esc(label)}</p>`;
+}
+function listPrintPage(d){
+ const rows=d.ids.map((aid,i)=>{const a=athlete(aid);return `<tr><td>${i+1}</td><td>${athleteName(aid)}</td><td>${esc(clubName(a?.club))}</td><td>${esc(a?.weight||'')} kg</td></tr>`}).join('');
+ const m=medals(d);
+ const summary=m?`<div class="medal-line">🥇 ${athleteName(m.gold)}　🥈 ${athleteName(m.silver)}<br>🥉 ${m.bronze.map(athleteName).join(' / ')}</div>`:'';
+ return `<article class="page">${printInfo(d)}<table><thead><tr><th style="width:10%">No</th><th>Sporcu</th><th>Kulüp</th><th style="width:15%">Kilo</th></tr></thead><tbody>${rows}</tbody></table>${summary}</article>`;
+}
+function bracketPrintPage(d){
+ const ids=d.ids, bs=bouts(d), m=medals(d);
+ const semi=bs.filter(b=>b.key!=='final');
+ const fin=bs.find(b=>b.key==='final');
+ const slot=(label,body)=>`<div class="slot"><strong>${label}</strong>${body}</div>`;
+ const person=aid=>aid?athleteName(aid):'—';
+ const entries=ids.map((aid,i)=>slot('Sporcu '+(i+1),person(aid)+'<div style="font-size:10px;color:#444;margin-top:4px">'+esc(clubName(athlete(aid)?.club))+'</div>')).join('');
+ const semiBoxes=semi.length?semi.map(b=>slot(b.label,b.players.map(person).join(' / ')+'<div style="margin-top:7px"><b>Kazanan:</b> '+person(d.semi[b.key])+'</div>')).join(''):slot('Yarı final','Bu kurada yarı final yok');
+ const finBox=slot('Final',fin?fin.players.map(person).join(' / '):'—')+slot('Şampiyon',person(d.final));
+ const result=m?`🥇 ${person(m.gold)}　🥈 ${person(m.silver)}<br>🥉 ${m.bronze.map(person).join(' / ')}`:'Şampiyon: __________________　 İkinci: __________________';
+ return `<article class="page">${printInfo(d)}<div class="draw-row"><div class="draw-col">${entries}</div><div class="draw-col">${semiBoxes}</div><div class="draw-col">${finBox}</div></div><div class="medal-line">${result}</div></article>`;
+}
+function showPrintPreview(kind){
+ if(!db.draws.length){alert('Önce kura oluşturun.');return}
+ printPreviewKind=kind;
+ $('previewPages').innerHTML=db.draws.map(kind==='bracket'?bracketPrintPage:listPrintPage).join('');
+ $('printPreview').classList.add('open');
+ document.body.style.overflow='hidden';
+ $('printPreview').scrollTop=0;
+}
+function closePrintPreview(){
+ $('printPreview').classList.remove('open');
+ document.body.style.overflow='';
+}
+function downloadPrintHTML(){
+ const pages=$('previewPages').innerHTML;
+ const styles=Array.from(document.querySelectorAll('style')).map(x=>x.textContent).join('\n');
+ // Bağımsız dosya: A4 sayfası ve yazdırma düğmesi (tarayıcıda çevrimdışı da açılabilir).
+ const html=`<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>A4 Kura ${printPreviewKind==='bracket'?'Çizelgesi':'Listesi'}</title><style>${styles}body{background:#edf1f6!important}#printPreview{position:static!important;display:block!important;overflow:visible!important;padding:12px!important}#printPreview .print-tools{display:flex!important}@media print{body{background:#fff!important}#printPreview .print-tools{display:none!important}}</style></head><body><section id="printPreview" class="open"><div class="print-tools"><button onclick="window.print()">🖨️ Yazdır / PDF kaydet</button><p class="print-help">Açılmazsa tarayıcı menüsünden Yazdır seçin.</p></div><div class="pages">${pages}</div></section></body></html>`;
+ const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));
+ const link=document.createElement('a');link.href=url;link.download='istanbul-kura-'+printPreviewKind+'-A4.html';document.body.appendChild(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+
+/* Telefondaki yazdırma penceresine ihtiyaç duymadan gerçek A4 PDF oluştur. */
+function downloadPDF(){
+ try{
+  if(!db.draws.length){alert('Önce kura oluşturun.');return}
+  const enc=new TextEncoder(), parts=[], offsets=[0];let total=0;
+  function push(data){const b=typeof data==='string'?enc.encode(data):data;parts.push(b);total+=b.length}
+  function obj(n,head,data,tail){offsets[n]=total;push(n+' 0 obj\n'+head);if(data)push(data);if(tail)push(tail);push('\nendobj\n')}
+  const N=db.draws.length;
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  const kids=db.draws.map((_,i)=>(3+i*3)+' 0 R').join(' ');
+  obj(2,'<< /Type /Pages /Count '+N+' /Kids ['+kids+'] >>');
+  function sheet(d){
+   const c=document.createElement('canvas');c.width=1240;c.height=1754;
+   const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
+   const left=85,right=1155;
+   function txt(t,x,y,size=24,bold=false,color='#17243b',maxWidth=1000){
+    g.fillStyle=color;g.font=(bold?'bold ':'')+size+'px Arial, sans-serif';
+    const words=String(t??'').split(/\s+/), lines=[];let line='';
+    for(const word of words){let candidate=line?line+' '+word:word;if(g.measureText(candidate).width>maxWidth&&line){lines.push(line);line=word}else line=candidate}
+    if(line)lines.push(line);
+    for(let i=0;i<lines.length;i++)g.fillText(lines[i],x,y+i*(size+8));
+    return lines.length*(size+8)
+   }
+   function box(x,y,w,h,title,body,detail){
+    g.fillStyle='#fff';g.fillRect(x,y,w,h);g.strokeStyle='#7c889b';g.lineWidth=2;g.strokeRect(x,y,w,h);
+    g.fillStyle='#bc2035';g.fillRect(x,y,7,h);
+    txt(title,x+19,y+37,23,true,'#17243b',w-37);
+    let z=y+78;z+=txt(body||'—',x+19,z,23,false,'#111827',w-35);
+    if(detail)txt(detail,x+19,Math.min(y+h-45,z+10),17,false,'#526079',w-35);
+   }
+   g.textAlign='center';
+   txt(db.tournament.name||'İstanbul Kulüpler Turnuvası',620,105,40,true,'#122650',1080);
+   txt([db.tournament.date,db.tournament.place].filter(Boolean).join(' • '),620,157,23,false,'#4b5563',1080);
+   txt('Kura '+d.number+' — '+d.key.replaceAll('|',' / ')+' kg',620,205,28,true,'#17243b',1080);
+   g.textAlign='left';
+   if(printPreviewKind==='list'){
+    let y=280;
+    g.fillStyle='#edf2f8';g.fillRect(left,y,right-left,65);
+    txt('NO',left+15,y+41,24,true);txt('SPORCU',left+105,y+41,24,true);txt('KULÜP',left+565,y+41,24,true);
+    y+=65;
+    d.ids.forEach((aid,i)=>{const a=athlete(aid);g.strokeStyle='#cbd5e1';g.strokeRect(left,y,right-left,115);
+      txt(String(i+1),left+17,y+43,25,true);txt(a?.name||'—',left+105,y+43,25,true,'#17243b',415);
+      txt(clubName(a?.club),left+565,y+43,22,false,'#374151',480);y+=115});
+    const m=medals(d);if(m)txt('ALTIN: '+(athlete(m.gold)?.name||'')+'    GÜMÜŞ: '+(athlete(m.silver)?.name||''),left,y+65,23,true);
+   }else{
+    const colW=326, gap=43, x1=left,x2=left+colW+gap,x3=x2+colW+gap;
+    d.ids.forEach((aid,i)=>{const a=athlete(aid);box(x1,285+i*265,colW,220,'SPORCU '+(i+1),a?.name,clubName(a?.club))});
+    const bs=bouts(d),semis=bs.filter(b=>b.key!=='final'),fin=bs.find(b=>b.key==='final');
+    if(semis.length){semis.forEach((b,i)=>box(x2,410+i*430,colW,250,b.label,b.players.map(aid=>athlete(aid)?.name||'—').join(' / '),'Kazanan: '+(athlete(d.semi[b.key])?.name||'—')))}
+    else box(x2,600,colW,230,'YARI FİNAL','Bu kurada yarı final yok','');
+    box(x3,530,colW,270,'FİNAL',fin?fin.players.map(aid=>athlete(aid)?.name||'—').join(' / '):'—','');
+    box(x3,900,colW,220,'ŞAMPİYON',athlete(d.final)?.name||'Henüz belirlenmedi','');
+    const m=medals(d);
+    if(m){txt('🥇 1. '+(athlete(m.gold)?.name||'—'),left,1470,27,true);
+      txt('2. '+(athlete(m.silver)?.name||'—'),left,1525,25);
+      txt('3. '+m.bronze.map(aid=>athlete(aid)?.name||'—').join(' / '),left,1580,25)}
+   }
+   g.strokeStyle='#cbd5e1';g.beginPath();g.moveTo(left,1650);g.lineTo(right,1650);g.stroke();
+   txt('İstanbul Kulüpler Turnuva Sistemi',left,1692,18,false,'#64748b');
+   return c.toDataURL('image/jpeg',0.88).split(',')[1];
+  }
+  function from64(base64){const raw=atob(base64),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out}
+  db.draws.forEach((d,i)=>{
+   const page=3+i*3,img=page+1,stream=page+2,bytes=from64(sheet(d));
+   obj(page,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im'+i+' '+img+' 0 R >> >> /Contents '+stream+' 0 R >>');
+   obj(img,'<< /Type /XObject /Subtype /Image /Width 1240 /Height 1754 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+bytes.length+' >>\nstream\n',bytes,'\nendstream');
+   const drawing='q\n595 0 0 842 0 0 cm\n/Im'+i+' Do\nQ\n';
+   obj(stream,'<< /Length '+enc.encode(drawing).length+' >>\nstream\n'+drawing+'endstream');
+  });
+  const xref=total;
+  push('xref\n0 '+(3+N*3)+'\n0000000000 65535 f \n');
+  for(let j=1;j<3+N*3;j++)push(String(offsets[j]).padStart(10,'0')+' 00000 n \n');
+  push('trailer\n<< /Size '+(3+N*3)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+  const blob=new Blob(parts,{type:'application/pdf'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='istanbul-kura-'+(printPreviewKind==='bracket'?'eslesmeli':'liste')+'-A4.pdf';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+ }catch(e){console.error(e);alert('PDF oluşturulamadı: '+e.message)}
+}
+
+
+/* Supabase'de onaylanan sporcuları yalnız yönetici hesabı ile yerel kuraya aktar. */
+async function syncApprovedAthletes(){
+ try{
+  if(!window.supabase){alert('Online bağlantı yüklenemedi. İnterneti kontrol edin.');return}
+  const client=window.supabase.createClient('https://wdwyirlqgptbprfzleli.supabase.co','sb_publishable_pDULKkJ7MWEg-GijQGnLHQ_mcP12FAy');
+  const {data:auth,error:authErr}=await client.auth.getUser();
+  if(authErr||!auth?.user){alert('Önce Online kulüp / yönetici girişi bölümünden yönetici hesabınıza giriş yapın.');return}
+  const {data:p,error:pErr}=await client.from('club_profiles').select('*').eq('user_id',auth.user.id).maybeSingle();
+  if(pErr)throw pErr;
+  if(!p||p.role!=='admin'){alert('Onaylı sporcuları yalnız yönetici aktarabilir.');return}
+  const [applications,profiles]=await Promise.all([
+   client.from('athlete_applications').select('*').eq('status','approved'),
+   client.from('club_profiles').select('*')
+  ]);
+  if(applications.error)throw applications.error;
+  if(profiles.error)throw profiles.error;
+  const guestApplications=await client.from('guest_athlete_applications').select('*').eq('status','approved');
+  if(guestApplications.error)throw guestApplications.error;
+  const byOwner=Object.fromEntries((profiles.data||[]).map(p=>[p.user_id,p]));
+  let pending=[];
+  for(const a of applications.data||[]){
+   const c=byOwner[a.user_id];if(!c||!c.active)continue;
+   const key='online-'+a.id;
+   if(db.athletes.some(x=>x.id===key))continue;
+   pending.push({key,a,c});
+  }
+  const guestPending=(guestApplications.data||[]).filter(a=>!db.athletes.some(x=>x.id==='guest-'+a.id));
+  if(!pending.length&&!guestPending.length){alert('Aktarılacak yeni onaylı sporcu yok.');return}
+  // Onaylı sporcuları içeri alırken mevcut kuralara veya sonuçlara asla dokunma.
+  let added=0;
+  for(const x of pending){
+   let club=db.clubs.find(c=>c.online_user_id===x.c.user_id);
+   if(!club){
+    club={id:id(),online_user_id:x.c.user_id,name:x.c.club_name,coach:x.c.coach_name,phone:x.c.phone||'',city:''};
+    db.clubs.push(club);
+   }
+   const a=x.a;
+   db.athletes.push({id:x.key,name:a.athlete_name,birth:a.birth_date,club:club.id,
+    age:a.age_group,gender:a.gender,weight:a.weight,license:a.license||''});
+   added++;
+  }
+  for(const a of guestPending){
+    const normalized=a.club_name.trim().toLocaleLowerCase('tr');
+    let club=db.clubs.find(c=>c.name.trim().toLocaleLowerCase('tr')===normalized);
+    if(!club){
+      club={id:id(),name:a.club_name,coach:a.coach_name,phone:a.contact_phone,city:''};
+      db.clubs.push(club);
+    }
+    db.athletes.push({id:'guest-'+a.id,name:a.athlete_name,birth:a.birth_date,club:club.id,
+      age:a.age_group,gender:a.gender,weight:a.weight,license:a.license||''});
+    added++;
+  }
+  // Eski kuralar ve maç sonuçları korunur. Yeni sporcular sonraki kuralarda kullanılabilir.
+  save();render();alert(added+' onaylı sporcu aktarıldı. Mevcut kuralar ve sonuçlar korundu. Yeni sporcular için yeni kura oluşturabilirsiniz.');
+ }catch(err){console.error(err);alert('Online aktarım yapılamadı: '+(err.message||err))}
+}
+
+weightOptions();categoryEdit();render();show('home');
+</script></body></html>
