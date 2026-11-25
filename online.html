@@ -3,7 +3,7 @@
 <title>Online Kulüp Başvurusu | İstanbul Kulüpler</title>
 <style>
 :root{font-family:system-ui,Arial,sans-serif;color:#162747;background:#f1f5fa}*{box-sizing:border-box}body{margin:0}header{background:#10254c;color:white;padding:22px 16px}header div,main{max-width:980px;margin:auto}h1{font-size:23px;margin:0}header a{color:white}main{padding:16px}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 12px #20385410}h2{font-size:20px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}input,select{width:100%;font:inherit;padding:12px;border:1px solid #ccd6e4;border-radius:9px}button{cursor:pointer;border:0;border-radius:9px;background:#142d58;color:white;padding:12px 15px;font-size:15px;font-weight:bold;margin:5px 5px 5px 0}.secondary{background:#e5ecf6;color:#142d58}.danger{background:#b91c35}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.hidden{display:none!important}.hint{color:#5d6b80;font-size:13px}.msg{white-space:pre-wrap;border-radius:8px;padding:12px;background:#e8f0fa}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:630px}td,th{text-align:left;padding:10px;border-bottom:1px solid #e4e8ef;font-size:14px}th{background:#f0f3f9}.pill{border-radius:20px;padding:3px 9px;background:#edf1f5;font-size:12px;display:inline-block}
-#auth{display:none!important}body:not(.manager-view) #account,body:not(.manager-view) #apply,body:not(.manager-view) #applications,body:not(.manager-view) #admin{display:none!important}body.manager-view #guest{display:none!important}body.manager-view #auth{display:block!important}</style></head><body>
+#auth{display:none!important}body:not(.manager-view) #account,body:not(.manager-view) #apply,body:not(.manager-view) #applications,body:not(.manager-view) #admin{display:none!important}body.manager-view #guest{display:none!important}body.manager-view #auth:not(.hidden){display:block!important}</style></head><body>
 <header><div><h1>🥋 Online Kulüp ve Sporcu Başvurusu</h1><p>İstanbul Kulüpler Turnuva Sistemi</p></div></header>
 <main>
 <div class="card"><strong>Durum:</strong> <span id="state">Bağlantı kontrol ediliyor…</span><p id="message" class="hint"></p></div>
@@ -99,13 +99,14 @@ async function boot(){
  if(!window.supabase){state('Bağlantı kütüphanesi yüklenemedi');notify('İnternet bağlantınızı kontrol edin.');return}
  api=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
  const {data,error:err}=await api.auth.getSession();if(err)error(err);session=data?.session||null;
- api.auth.onAuthStateChange((_event,s)=>{session=s;setTimeout(load,0)});
+ api.auth.onAuthStateChange((_event,s)=>{session=s;setTimeout(()=>load().catch(error),0)});
  await load();
 }
 async function load(){
  const managerView=location.hash==='#yonetici';document.body.classList.toggle('manager-view',managerView);
  show('auth',managerView&&!session);show('guest',!managerView);show('account',managerView&&!!session);show('apply',false);show('applications',false);show('admin',false);
- if(!session){state(managerView?'Yönetici girişi gerekli':'Şifresiz başvuru formu hazır');return}
+ if(!managerView){state('Şifresiz başvuru formu hazır');return}
+ if(!session){profile=null;state('Yönetici girişi gerekli');return}
  state('Hesap açık');$('who').textContent='E-posta: '+session.user.email;
  const {data, error:err}=await api.from('club_profiles').select('*').eq('user_id',session.user.id).maybeSingle();
  if(err){error(err);state('Veritabanı kurulumu gerekli');return}
@@ -124,18 +125,21 @@ $('login').onclick=async()=>{const {error:err}=await api.auth.signInWithPassword
 $('guestForm').onsubmit=async ev=>{
  ev.preventDefault();
  const form=ev.currentTarget,button=$('guestSubmit');$('guestResult').style.display='none';
+ if(button.disabled)return;
  if(!api){guestNotice('Veritabanına bağlantı kurulamadı. Sayfayı yenileyip tekrar deneyin.',false);return}
  if($('guestWebsite').value.trim()){guestNotice('Başvuru doğrulanamadı. Tekrar deneyin.',false);return}
  if(!form.reportValidity())return;
  const weight=selectedWeight('guestWeight','guestWeightOther');
- if(!weight || weight==='other'){guestNotice('Lütfen kilo kategorisi seçin.',false);return}
- const payload={club_name:$('guestClub').value.trim(),coach_name:$('guestCoach').value.trim(),contact_phone:$('guestPhone').value.trim(),athlete_name:$('guestName').value.trim(),birth_date:$('guestBirth').value,gender:$('guestGender').value,age_group:$('guestAge').value,weight,license:$('guestLicense').value.trim()};
+ if(!/^\+?\d{1,3}(?:[.,]\d{1,2})?$/.test(weight)){guestNotice('Lütfen kilo kategorisi seçin.',false);return}
+ const payload={club_name:$('guestClub').value.trim(),coach_name:$('guestCoach').value.trim(),contact_phone:$('guestPhone').value.trim(),athlete_name:$('guestName').value.trim(),birth_date:$('guestBirth').value,gender:$('guestGender').value,age_group:$('guestAge').value,weight:weight.replace(',','.'),license:$('guestLicense').value.trim()};
+ if(!payload.club_name||!payload.coach_name||!payload.contact_phone||!payload.athlete_name){guestNotice('Lütfen zorunlu alanları doldurun.',false);return}
+ if(payload.birth_date>new Date().toISOString().slice(0,10)){guestNotice('Doğum tarihi gelecekte olamaz.',false);return}
  button.disabled=true;button.textContent='Başvuru gönderiliyor…';
  try{
   const {error:err}=await api.from('guest_athlete_applications').insert(payload);
   if(err)throw err;
-  form.reset();setWeightOptions('guestAge','guestGender','guestWeight','guestWeightOther');
-  guestNotice('✓ BAŞVURU GÖNDERİLDİ. Sporcu yönetici onayı bekliyor.',true);
+  $('guestName').value='';$('guestBirth').value='';$('guestLicense').value='';$('guestWeight').value='';$('guestWeightOther').value='';setWeightOptions('guestAge','guestGender','guestWeight','guestWeightOther');
+  guestNotice('✓ BAŞVURU GÖNDERİLDİ. Sporcu yönetici onayı bekliyor. Kulüp bilgileri korundu; sıradaki sporcuyu ekleyebilirsiniz.',true);
  }catch(err){
   console.error('Misafir başvurusu başarısız',err);
   guestNotice('BAŞVURU KAYDEDİLEMEDİ: '+(err?.message||'Bağlantı hatası. İnterneti kontrol edin ve tekrar deneyin.'),false);
@@ -177,7 +181,7 @@ $('refreshGuest').onclick=listGuest;
 async function listGuest(){
  if(!session||profile?.role!=='admin')return;
  const {data,error:err}=await api.from('guest_athlete_applications').select('*').order('created_at',{ascending:false}).limit(500);
- if(err){error(err);return}
+ if(err){error(err);$('guestTable').textContent='Başvurular yüklenemedi. '+err.message;return}
  const statuses={pending:'Beklemede',approved:'Onaylandı',rejected:'Reddedildi'};
  $('guestTable').innerHTML='<table><tr><th>Kulüp</th><th>Antrenör / Telefon</th><th>Sporcu</th><th>Kategori</th><th>Durum</th><th>İşlem</th></tr>'+
  (data||[]).map(a=>'<tr><td>'+e(a.club_name)+'</td><td>'+e(a.coach_name)+' / '+e(a.contact_phone)+'</td><td>'+e(a.athlete_name)+'</td><td>'+e(a.age_group+' / '+a.gender+' / '+a.weight+' kg')+'</td><td>'+e(statuses[a.status]||a.status)+'</td><td>'+(a.status==='pending'?'<button data-guest-id="'+e(a.id)+'" data-guest-status="approved">Onayla</button><button class="danger" data-guest-id="'+e(a.id)+'" data-guest-status="rejected">Reddet</button>':'—')+'</td></tr>').join('')+'</table>';
@@ -186,7 +190,7 @@ async function listGuest(){
 async function reviewGuest(id,status){
  if(!confirm(status==='approved'?'Kulüp bilgilerini kontrol ettiniz mi? Başvuru onaylansın mı?':'Başvuru reddedilsin mi?'))return;
  const {error:err}=await api.from('guest_athlete_applications').update({status}).eq('id',id).eq('status','pending');
- if(err)error(err);else await listGuest();
+ if(err)error(err);else {notify(status==='approved'?'Başvuru onaylandı.':'Başvuru reddedildi.');await listGuest();}
 }
 async function del(id){if(!confirm('Bekleyen sporcu başvurusunu silmek istiyor musunuz?'))return;const {error:err}=await api.from('athlete_applications').delete().eq('id',id).eq('status','pending');if(err)error(err);else await list()}
 async function approveClub(id,active){const {error:err}=await api.from('club_profiles').update({active}).eq('user_id',id);if(err)error(err);else await list()}
