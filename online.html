@@ -3,7 +3,7 @@
 <title>Online Kulüp Başvurusu | İstanbul Kulüpler</title>
 <style>
 :root{font-family:system-ui,Arial,sans-serif;color:#162747;background:#f1f5fa}*{box-sizing:border-box}body{margin:0}header{background:#10254c;color:white;padding:22px 16px}header div,main{max-width:980px;margin:auto}h1{font-size:23px;margin:0}header a{color:white}main{padding:16px}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 12px #20385410}h2{font-size:20px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}input,select{width:100%;font:inherit;padding:12px;border:1px solid #ccd6e4;border-radius:9px}button{cursor:pointer;border:0;border-radius:9px;background:#142d58;color:white;padding:12px 15px;font-size:15px;font-weight:bold;margin:5px 5px 5px 0}.secondary{background:#e5ecf6;color:#142d58}.danger{background:#b91c35}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.hidden{display:none!important}.hint{color:#5d6b80;font-size:13px}.msg{white-space:pre-wrap;border-radius:8px;padding:12px;background:#e8f0fa}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:630px}td,th{text-align:left;padding:10px;border-bottom:1px solid #e4e8ef;font-size:14px}th{background:#f0f3f9}.pill{border-radius:20px;padding:3px 9px;background:#edf1f5;font-size:12px;display:inline-block}
-#auth{display:none!important}body:not(.manager-view) #account,body:not(.manager-view) #apply,body:not(.manager-view) #applications,body:not(.manager-view) #admin{display:none!important}body.manager-view #guest{display:none!important}body.manager-view #auth:not(.hidden){display:block!important}</style></head><body>
+#auth{display:none!important}body:not(.manager-view) #account,body:not(.manager-view) #apply,body:not(.manager-view) #applications,body:not(.manager-view) #admin{display:none!important}body.manager-view #guest{display:none!important}body.manager-view #auth:not(.hidden){display:block!important}@media(max-width:650px){#guestTable table,#guestTable tbody,#guestTable tr,#guestTable td{display:block;width:100%;min-width:0}#guestTable tr:first-child{display:none}#guestTable tr{border:1px solid #dce4ef;border-radius:12px;padding:8px;margin:10px 0}#guestTable td{border:0;padding:5px 7px;overflow-wrap:anywhere}#guestTable td:nth-child(1){font-weight:700}#guestTable td:nth-child(3){font-weight:700;font-size:16px}#guestTable td:nth-child(5){font-weight:700}#guestTable td:nth-child(6) button{min-width:100px}#guestTable td:nth-child(4)::before{content:"Kategori: "}#guestTable td:nth-child(5)::before{content:"Durum: "}}</style></head><body>
 <header><div><h1>🥋 Online Kulüp ve Sporcu Başvurusu</h1><p>İstanbul Kulüpler Turnuva Sistemi</p></div></header>
 <main>
 <div class="card"><strong>Durum:</strong> <span id="state">Bağlantı kontrol ediliyor…</span><p id="message" class="hint"></p></div>
@@ -40,7 +40,7 @@
 <div><label>Lisans numarası (isteğe bağlı)</label><input id="license"></div>
 </div><button type="submit">Başvuruyu yöneticiye gönder</button></form></section>
 <section id="applications" class="card hidden"><h2>Başvurular</h2><button id="refresh" class="secondary">Yenile</button><div class="scroll" id="table"></div></section>
-<section id="admin" class="card hidden"><h2>Yönetici onay paneli</h2><p class="hint">Kulüp hesabını etkinleştirin; sporcu başvurusunu onaylayın veya reddedin.</p><h3>Kulüpler</h3><div class="scroll" id="clubsTable"></div><h3>Hesaplı sporcu başvuruları</h3><div class="scroll" id="adminTable"></div><h3>Şifresiz kulüp başvuruları</h3><button id="refreshGuest" class="secondary">Misafir başvurularını yenile</button><div class="scroll" id="guestTable"></div></section>
+<section id="admin" class="card hidden"><h2>Yönetici onay paneli</h2><p class="hint">Kulüp hesabını etkinleştirin; sporcu başvurusunu onaylayın veya reddedin.</p><h3>Kulüpler</h3><div class="scroll" id="clubsTable"></div><h3>Hesaplı sporcu başvuruları</h3><div class="scroll" id="adminTable"></div><h3>Şifresiz kulüp başvuruları</h3><button id="refreshGuest" class="secondary">Misafir başvurularını yenile</button><p id="guestAdminNotice" role="status" aria-live="polite" style="display:none;padding:12px;border-radius:8px;font-weight:700"></p><div class="scroll" id="guestTable"></div></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -187,10 +187,27 @@ async function listGuest(){
  (data||[]).map(a=>'<tr><td>'+e(a.club_name)+'</td><td>'+e(a.coach_name)+' / '+e(a.contact_phone)+'</td><td>'+e(a.athlete_name)+'</td><td>'+e(a.age_group+' / '+a.gender+' / '+a.weight+' kg')+'</td><td>'+e(statuses[a.status]||a.status)+'</td><td>'+(a.status==='pending'?'<button data-guest-id="'+e(a.id)+'" data-guest-status="approved">Onayla</button><button class="danger" data-guest-id="'+e(a.id)+'" data-guest-status="rejected">Reddet</button>':'—')+'</td></tr>').join('')+'</table>';
  $('guestTable').querySelectorAll('[data-guest-status]').forEach(b=>b.onclick=()=>reviewGuest(b.dataset.guestId,b.dataset.guestStatus));
 }
+function guestAdminNotice(message,ok){
+ const el=$('guestAdminNotice');el.style.display='block';el.style.background=ok?'#dcfce7':'#fee2e2';el.style.color=ok?'#14532d':'#991b1b';el.textContent=message;el.scrollIntoView({behavior:'smooth',block:'center'});
+}
 async function reviewGuest(id,status){
+ if(!session||profile?.role!=='admin')return;
+ if(!['approved','rejected'].includes(status))return;
  if(!confirm(status==='approved'?'Kulüp bilgilerini kontrol ettiniz mi? Başvuru onaylansın mı?':'Başvuru reddedilsin mi?'))return;
- const {error:err}=await api.from('guest_athlete_applications').update({status}).eq('id',id).eq('status','pending');
- if(err)error(err);else {notify(status==='approved'?'Başvuru onaylandı.':'Başvuru reddedildi.');await listGuest();}
+ const buttons=Array.from($('guestTable').querySelectorAll('[data-guest-id]')).filter(b=>b.dataset.guestId===id);
+ buttons.forEach(b=>b.disabled=true);
+ try{
+  const {data,error:err}=await api.from('guest_athlete_applications').update({status}).eq('id',id).eq('status','pending').select('id,status');
+  if(err)throw err;
+  if(!data?.length){
+   const check=await api.from('guest_athlete_applications').select('id,status').eq('id',id).maybeSingle();
+   if(check.error)throw check.error;
+   if(check.data?.status!==status)throw Error('Veritabanı değişikliği kaydetmedi. Yönetici UPDATE izni (RLS) kontrol edilmeli.');
+  }else if(data[0].status!==status)throw Error('Başvuru durumu değişmedi.');
+  await listGuest();
+  guestAdminNotice(status==='approved'?'✓ Başvuru onaylandı. Turnuva panelinden onaylı sporcuları aktarabilirsiniz.':'✓ Başvuru reddedildi.',true);
+ }catch(err){console.error(err);guestAdminNotice('İşlem kaydedilemedi: '+(err?.message||String(err)),false)}
+ finally{buttons.forEach(b=>b.disabled=false)}
 }
 async function del(id){if(!confirm('Bekleyen sporcu başvurusunu silmek istiyor musunuz?'))return;const {error:err}=await api.from('athlete_applications').delete().eq('id',id).eq('status','pending');if(err)error(err);else await list()}
 async function approveClub(id,active){const {error:err}=await api.from('club_profiles').update({active}).eq('user_id',id);if(err)error(err);else await list()}
