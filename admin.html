@@ -52,21 +52,8 @@
   #printPreview table{width:100%!important;min-width:0!important}
   #printPreview .draw-row{min-height:200px}
 }
-</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><style id="access-gate">body{visibility:hidden}</style><script>
-(async function(){
- const login='online.html';
- try{
-  if(!window.supabase)throw Error('Bağlantı yüklenemedi');
-  const c=window.supabase.createClient('https://wdwyirlqgptbprfzleli.supabase.co','sb_publishable_pDULKkJ7MWEg-GijQGnLHQ_mcP12FAy');
-  const {data:{session},error}=await c.auth.getSession();
-  if(error||!session)throw Error('Oturum yok');
-  const {data:profile,error:pe}=await c.from('club_profiles').select('role').eq('user_id',session.user.id).maybeSingle();
-  if(pe||profile?.role!=='admin')throw Error('Yönetici yetkisi gerekli');
-  document.getElementById('access-gate').remove();
- }catch(e){location.replace(login+'#yonetici');}
-})();
-</script></head><body><header><div class="wrap"><h1>🏆 İSTANBUL KULÜPLER SİSTEMİ</h1><p>Taekwondo • Sporcu Başvurusu • Otomatik Kura • Maç Sonuçları</p></div></header><main class="wrap"><nav class="tabs no-print" id="tabs"></nav><div id="home" class="panel active"><div class="grid" id="stats"></div><div class="card"><h2>Turnuva bilgileri</h2><div class="grid"><div><label>Turnuva adı</label><input id="tname" placeholder="İstanbul Kulüpler Turnuvası"></div><div><label>Turnuva tarihi</label><input type="date" id="tdate"></div><div><label>Turnuva yeri</label><input id="tplace" placeholder="İstanbul"></div></div><div class="actions"><button onclick="saveTournament()">Turnuvayı kaydet</button><a href="online.html#yonetici" style="display:inline-block;background:#bc2035;color:white;padding:11px 15px;border-radius:9px;font-weight:700;text-decoration:none">🏢 Online başvuru onayları</a><button id="syncApprovedButton" type="button" onclick="syncApprovedAthletes()" class="secondary">✅ Onaylı sporcuları aktar</button><div id="syncNotice" role="status" aria-live="polite" style="display:none;flex:1 0 100%;padding:14px;border-radius:10px;overflow-wrap:anywhere"><strong id="syncNoticeTitle" style="display:block;font-size:17px"></strong><div id="syncNoticeDetail" style="white-space:pre-line;margin-top:6px;line-height:1.5"></div><button id="syncShowAthletes" type="button" class="secondary" style="display:none;margin-top:10px" onclick="show('athletes')">Aktarılan sporcuları gör →</button></div><button class="secondary" onclick="exportData()">Verileri yedekle (JSON)</button><label style="margin:0"><input type="file" id="import" accept="application/json" style="max-width:220px" onchange="importData(event)">Yedeği geri yükle</label></div><p class="note">Bu sürüm verileri kullandığınız tarayıcıda saklar. Tarayıcı verileri silinirse kayıtlar kaybolabilir; düzenli yedek alın. Kulüpler farklı cihazlardan online başvuru gönderebilir. Yönetici onayından sonra sporcuları aktarın. Kuralar ve sonuçlar bu tarayıcıda saklanır.</p></div></div>
-<section id="clubs" class="panel"><div class="card"><h2>Kulüp kaydı</h2><form id="clubForm"><div class="grid"><div><label>Kulüp adı</label><input id="cname" required></div><div><label>Antrenör</label><input id="ccoach" required></div><div><label>Telefon</label><input id="cphone" type="tel"></div><div><label>İl / ilçe</label><input id="ccity" placeholder="İstanbul / Fatih"></div></div><div class="actions"><button>Kulüp ekle</button></div></form></div><div class="card"><h2>Kulüpler</h2><p id="clubNotice" role="status" hidden style="padding:12px;border-radius:9px;font-weight:700"></p><div id="clubList"></div><details style="margin-top:16px"><summary style="cursor:pointer;font-weight:700">Arşivlenen kulüpler</summary><div id="archivedClubList"></div></details></div></section>
+</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><style>#managerApp[hidden],#managerLogin[hidden],#managerLogout[hidden]{display:none!important}body:not(.manager-ready) #printPreview{display:none!important}#managerLogin{max-width:480px;margin:20px auto;padding:0 16px}.approval-card{border:1px solid #dbe4ef;border-radius:12px;padding:13px;margin:10px 0;overflow-wrap:anywhere}.approval-card strong{display:block;font-size:16px}.approval-card .muted{margin:4px 0}.approval-status{font-weight:750;margin:8px 0}.approval-status.approved{color:#166534}.approval-status.rejected{color:#991b1b}.approval-status.pending{color:#8a5b10}#approvalNotice{white-space:pre-line;padding:10px;border-radius:8px}#approvalNotice[hidden]{display:none}</style></head><body><header><div class="wrap"><h1>🏆 İSTANBUL KULÜPLER SİSTEMİ</h1><p>Taekwondo • Sporcu Başvurusu • Otomatik Kura • Maç Sonuçları</p></div></header><section id="managerLogin"><div class="card"><h2>Yönetici girişi</h2><p class="muted">Başvurular ve turnuva yönetimi için yönetici hesabınızla giriş yapın.</p><form id="managerLoginForm"><label for="managerEmail">E-posta</label><input id="managerEmail" type="email" autocomplete="username" required><label for="managerPassword">Şifre</label><input id="managerPassword" type="password" autocomplete="current-password" required><button id="managerLoginButton" type="submit" disabled style="margin-top:12px">Giriş yap</button></form><p id="managerLoginNotice" role="status" aria-live="polite">Oturum kontrol ediliyor…</p></div></section><main class="wrap" id="managerApp" hidden><div class="actions no-print" style="justify-content:flex-end"><button id="managerLogout" class="secondary" type="button">Çıkış yap</button></div><nav class="tabs no-print" id="tabs"></nav><div id="home" class="panel active"><div class="grid" id="stats"></div><div class="card"><h2>Turnuva bilgileri</h2><div class="grid"><div><label>Turnuva adı</label><input id="tname" placeholder="İstanbul Kulüpler Turnuvası"></div><div><label>Turnuva tarihi</label><input type="date" id="tdate"></div><div><label>Turnuva yeri</label><input id="tplace" placeholder="İstanbul"></div></div><div class="actions"><button onclick="saveTournament()">Turnuvayı kaydet</button><button type="button" class="danger" onclick="show('approvals')">📋 Gelen sporcu başvuruları</button><button id="syncApprovedButton" type="button" onclick="syncApprovedAthletes()" class="secondary">✅ Onaylı sporcuları aktar</button><div id="syncNotice" role="status" aria-live="polite" style="display:none;flex:1 0 100%;padding:14px;border-radius:10px;overflow-wrap:anywhere"><strong id="syncNoticeTitle" style="display:block;font-size:17px"></strong><div id="syncNoticeDetail" style="white-space:pre-line;margin-top:6px;line-height:1.5"></div><button id="syncShowAthletes" type="button" class="secondary" style="display:none;margin-top:10px" onclick="show('athletes')">Aktarılan sporcuları gör →</button></div><button class="secondary" onclick="exportData()">Verileri yedekle (JSON)</button><label style="margin:0"><input type="file" id="import" accept="application/json" style="max-width:220px" onchange="importData(event)">Yedeği geri yükle</label></div><p class="note">Bu sürüm verileri kullandığınız tarayıcıda saklar. Tarayıcı verileri silinirse kayıtlar kaybolabilir; düzenli yedek alın. Kulüpler farklı cihazlardan online başvuru gönderebilir. Yönetici onayından sonra sporcuları aktarın. Kuralar ve sonuçlar bu tarayıcıda saklanır.</p></div></div>
+<section id="approvals" class="panel"><div class="card"><h2>Gelen sporcu başvuruları</h2><p class="muted">Kulüplerden gelen başvuruları burada inceleyin, onaylayın veya reddedin. Ayrı bir panele geçmeniz gerekmez.</p><div class="actions"><button class="secondary" type="button" onclick="loadApprovals()">Başvuruları yenile</button><button type="button" onclick="show('home');syncApprovedAthletes()">Onaylı sporcuları aktar</button></div><p id="approvalNotice" role="status" aria-live="polite" hidden></p><div id="approvalCounts"></div><div id="approvalGuestList"></div><details style="margin-top:18px"><summary style="font-weight:700;cursor:pointer">Önceki hesaplı kulüpler ve başvurular</summary><div id="approvalLegacyList"></div></details></div></section><section id="clubs" class="panel"><div class="card"><h2>Kulüp kaydı</h2><form id="clubForm"><div class="grid"><div><label>Kulüp adı</label><input id="cname" required></div><div><label>Antrenör</label><input id="ccoach" required></div><div><label>Telefon</label><input id="cphone" type="tel"></div><div><label>İl / ilçe</label><input id="ccity" placeholder="İstanbul / Fatih"></div></div><div class="actions"><button>Kulüp ekle</button></div></form></div><div class="card"><h2>Kulüpler</h2><p id="clubNotice" role="status" hidden style="padding:12px;border-radius:9px;font-weight:700"></p><div id="clubList"></div><details style="margin-top:16px"><summary style="cursor:pointer;font-weight:700">Arşivlenen kulüpler</summary><div id="archivedClubList"></div></details></div></section>
 <section id="athletes" class="panel"><div class="card"><h2>Sporcu başvurusu</h2><form id="athleteForm"><div class="grid"><div><label>Ad soyad</label><input id="aname" required></div><div><label>Doğum tarihi</label><input type="date" id="abirth" required></div><div><label>Cinsiyet</label><select id="agender"><option>Erkek</option><option>Bayan</option></select></div><div><label>Yaş grubu</label><select id="aage"></select></div><div><label>Kilo kategorisi</label><select id="aweight"></select></div><div><label>Kulüp</label><select id="aclub" required></select></div><div><label>Lisans numarası (isteğe bağlı)</label><input id="alicense"></div></div><div class="actions"><button id="athleteSubmitButton">Başvuruyu kaydet</button><button type="button" class="secondary hide" id="cancelAthleteEdit" onclick="cancelEditAthlete()">Düzenlemeyi iptal et</button></div></form><p class="muted">Yaş ve kilo seçenekleri başlangıç şablonudur. Turnuvanın resmî talimatına göre kategorileri kontrol edin.</p></div><div class="card"><h2>Sporcu listesi</h2><input id="asearch" placeholder="Sporcu ara..." oninput="render()"><div class="tablewrap" id="athleteList"></div></div></section>
 <section id="categories" class="panel"><div class="card"><h2>Yaş ve kilo kategorileri</h2><p>Yaş grupları: Alt Minik, Minik, Yıldız, Genç, Ümit, Büyük. 2026 doğum yılı şablonu: Minik 2014–2016, Yıldız 2012–2014, Genç 2009–2011, Ümit 2006–2010, Büyük 2009 ve öncesi. Alt Minik yönetici tarafından belirlenir.</p><p class="note">Görselde bazı erkek kilo değerleri eksik olduğundan sistemde bunlar başlangıçta tanımlı değildir. Her kategorinin kilolarını aşağıdan düzenleyin.</p><div class="grid"><div><label>Yaş grubu</label><select id="kage"></select></div><div><label>Cinsiyet</label><select id="kgender"><option>Erkek</option><option>Bayan</option></select></div></div><label>Virgülle ayrılmış kilo kategorileri (örnek: 30,33,36,+57)</label><textarea id="kvalues" rows="3"></textarea><div class="actions"><button onclick="saveWeights()">Kiloları kaydet</button></div></div></section>
 <section id="draws" class="panel"><div class="card"><h2>Otomatik kura</h2><p>Her kura en fazla 4 sporcudan oluşur. Sporcular yaş grubu, cinsiyet ve kiloya göre ayrılır. Aynı kulüp sporcuları mümkün olduğunca ayrı gruplara dağıtılır.</p><div class="actions"><button onclick="makeNewDraws()">🎲 Yeni sporculara kura çek</button><button class="secondary" onclick="repairDuplicateDraws()">Tekrarlanan kura kayıtlarını kontrol et</button><button type="button" class="danger" onclick="makeDraws()">⚠️ Tüm kuraları sıfırdan çek</button><button class="secondary" onclick="show('print-area')">Kura listelerini görüntüle</button></div><p class="note">Yeni sporculara kura çek, mevcut kura ve maç sonuçlarını korur. “Tüm kuraları sıfırdan çek” ise yalnız onayınızla eski sonuçları siler.</p></div><div class="card"><details><summary style="cursor:pointer;font-weight:700">Kuraya kapatılan mükerrer kayıtlar</summary><div id="excludedDuplicates"></div></details></div><div id="drawPreview"></div></section>
@@ -86,7 +73,7 @@ const ages=['Alt Minik','Minik','Yıldız','Genç','Ümit','Büyük'];const base
 'Ümit|Erkek':['54','58','63','68','74','80','87','+87'],'Büyük|Erkek':['54','58','63','68','74','80','87','+87']};
 let db;try{db=JSON.parse(localStorage.getItem('istanbulKulupV1'))}catch(e){}if(!db||!Array.isArray(db.clubs)||!Array.isArray(db.athletes))db={clubs:[],athletes:[],draws:[],weights:base,tournament:{name:'İstanbul Kulüpler Turnuvası',date:'',place:'İstanbul'}};db.weights ||= structuredClone(base);for(const [k,v] of Object.entries(base)){if(!Array.isArray(db.weights[k])||db.weights[k].length===0)db.weights[k]=[...v]}db.draws ||= [];
 const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const save=()=>localStorage.setItem('istanbulKulupV1',JSON.stringify(db));const id=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random();const clubName=x=>db.clubs.find(c=>c.id===x)?.name||'—';const athlete=x=>db.athletes.find(a=>a.id===x);const athleteName=x=>esc(athlete(x)?.name||'—');
-const nav=[['home','Ana Sayfa'],['clubs','Kulüpler'],['athletes','Sporcu Başvurusu'],['categories','Kilolar'],['draws','Otomatik Kura'],['results','Maç Sonuçları'],['medals','Madalyalar'],['print-area','A4 Yazdır']];$('tabs').innerHTML=nav.map(([k,n])=>`<button data-tab="${k}" onclick="show('${k}')">${n}</button>`).join('');function show(k){document.querySelectorAll('.panel').forEach(e=>e.classList.toggle('active',e.id===k));document.querySelectorAll('[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===k));render();scrollTo(0,0)}
+const nav=[['home','Ana Sayfa'],['approvals','Gelen Başvurular'],['clubs','Kulüpler'],['athletes','Sporcu Başvurusu'],['categories','Kilolar'],['draws','Otomatik Kura'],['results','Maç Sonuçları'],['medals','Madalyalar'],['print-area','A4 Yazdır']];$('tabs').innerHTML=nav.map(([k,n])=>`<button data-tab="${k}" onclick="show('${k}')">${n}</button>`).join('');function show(k){document.querySelectorAll('.panel').forEach(e=>e.classList.toggle('active',e.id===k));document.querySelectorAll('[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===k));render();scrollTo(0,0);if(k==='approvals'&&managerAuthorized)loadApprovals()}
 function options(id,vals){$(id).innerHTML=vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')};options('aage',ages);options('kage',ages);function weightOptions(){let vals=db.weights[$('aage').value+'|'+$('agender').value]||[];options('aweight',vals.length?vals:['Tanımlanmadı'])}function categoryEdit(){let v=db.weights[$('kage').value+'|'+$('kgender').value]||[];$('kvalues').value=v.join(', ')}$('aage').onchange=weightOptions;$('agender').onchange=weightOptions;$('kage').onchange=categoryEdit;$('kgender').onchange=categoryEdit;function saveWeights(){let v=$('kvalues').value.split(',').map(x=>x.trim()).filter(Boolean);if(v.some(x=>!/^\+?\d+(?:\.\d+)?$/.test(x))){alert('Kiloları örnekteki gibi yazın.');return}db.weights[$('kage').value+'|'+$('kgender').value]=[...new Set(v)];save();weightOptions();alert('Kategoriler kaydedildi')}
 $('clubForm').onsubmit=e=>{e.preventDefault();let name=$('cname').value.trim();if(db.clubs.some(c=>c.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'))){alert('Bu kulüp zaten kayıtlı');return}db.clubs.push({id:id(),name,coach:$('ccoach').value.trim(),phone:$('cphone').value.trim(),city:$('ccity').value.trim()});save();e.target.reset();render()};
 let editingAthleteId=null;
@@ -399,7 +386,8 @@ async function syncApprovedAthletes(){
  const button=$('syncApprovedButton');if(button.disabled)return;button.disabled=true;button.textContent='Sporcular aktarılıyor…';showSyncNotice('info','Aktarım yapılıyor…','Onaylı başvurular kontrol ediliyor.');
  try{
   if(!window.supabase)throw Error('Online bağlantı yüklenemedi. İnterneti kontrol edin.');
-  const client=window.supabase.createClient('https://wdwyirlqgptbprfzleli.supabase.co','sb_publishable_pDULKkJ7MWEg-GijQGnLHQ_mcP12FAy');
+  if(!managerAuthorized||!managerClient)throw Error('Yönetici girişi gerekli.');
+  const client=managerClient;
   const {data:auth,error:authErr}=await client.auth.getUser();
   if(authErr||!auth?.user)throw Error('Önce yönetici hesabınıza giriş yapın.');
   const {data:p,error:pErr}=await client.from('club_profiles').select('*').eq('user_id',auth.user.id).maybeSingle();
@@ -457,5 +445,111 @@ async function syncApprovedAthletes(){
  finally{button.disabled=false;button.textContent='✅ Onaylı sporcuları aktar'}
 }
 
-weightOptions();categoryEdit();render();show('home');
+let managerClient=null,managerAuthorized=false,managerSession=null;
+let approvalBusy=false,approvalVersion=0;
+function managerMessage(message,isError=false){const el=$('managerLoginNotice');el.textContent=message;el.style.color=isError?'#991b1b':'#17243b'}
+function lockManager(){
+ managerAuthorized=false;managerSession=null;approvalVersion++;
+ document.body.classList.remove('manager-ready');$('managerApp').hidden=true;$('managerLogin').hidden=false;
+ $('approvalGuestList').textContent='';$('approvalLegacyList').textContent='';$('approvalCounts').textContent='';
+ $('previewPages').textContent='';$('printPreview').classList.remove('open');
+}
+async function authorizeManager(session){
+ if(!session){lockManager();managerMessage('Yönetici e-posta ve şifrenizle giriş yapın.');return false}
+ const {data:auth,error:authErr}=await managerClient.auth.getUser();
+ if(authErr||!auth?.user)throw Error('Oturum doğrulanamadı. Yeniden giriş yapın.');
+ const {data:profile,error}=await managerClient.from('club_profiles').select('role').eq('user_id',auth.user.id).maybeSingle();
+ if(error)throw error;
+ if(profile?.role!=='admin')throw Error('Bu hesabın yönetici yetkisi yok.');
+ managerSession=session;managerAuthorized=true;document.body.classList.add('manager-ready');$('managerLogin').hidden=true;$('managerApp').hidden=false;
+ weightOptions();categoryEdit();show(location.hash==='#basvurular'?'approvals':'home');
+ return true;
+}
+async function managerBoot(){
+ if(!window.supabase){managerMessage('Bağlantı kütüphanesi yüklenemedi. Sayfayı yenileyin.',true);return}
+ managerClient=window.supabase.createClient('https://wdwyirlqgptbprfzleli.supabase.co','sb_publishable_pDULKkJ7MWEg-GijQGnLHQ_mcP12FAy');
+ managerClient.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){lockManager();managerMessage('Oturum kapandı. Yeniden giriş yapabilirsiniz.')}});
+ try{
+  const {data,error}=await managerClient.auth.getSession();if(error)throw error;
+  await authorizeManager(data?.session);
+ }catch(e){lockManager();managerMessage(e.message||String(e),true)}
+ finally{$('managerLoginButton').disabled=false}
+}
+$('managerLoginForm').onsubmit=async ev=>{
+ ev.preventDefault();if(!managerClient)return;
+ const button=$('managerLoginButton');if(button.disabled)return;button.disabled=true;managerMessage('Giriş yapılıyor…');
+ try{
+  const {data,error}=await managerClient.auth.signInWithPassword({email:$('managerEmail').value.trim(),password:$('managerPassword').value});
+  if(error)throw error;await authorizeManager(data.session);$('managerPassword').value='';
+ }catch(e){lockManager();managerMessage(e.message||String(e),true)}
+ finally{button.disabled=false}
+};
+$('managerLogout').onclick=async()=>{
+ if(!managerClient)return;
+ if(!confirm('Yönetici oturumu kapatılsın mı?'))return;
+ const {error}=await managerClient.auth.signOut();if(error){alert('Çıkış yapılamadı: '+error.message);return}location.replace('admin.html');
+};
+function approvalNotice(message,ok=true){
+ const el=$('approvalNotice');el.hidden=false;el.textContent=message;el.style.background=ok?'#dcfce7':'#fee2e2';el.style.color=ok?'#14532d':'#991b1b';
+}
+const approvalLabels={pending:'Beklemede',approved:'Onaylandı',rejected:'Reddedildi'};
+function approvalCard(a,club,kind){
+ const status=String(a.status||'pending');
+ const controls=status==='pending'?'<div class="actions"><button data-review="approved" data-kind="'+kind+'" data-id="'+esc(a.id)+'">Onayla</button><button class="danger" data-review="rejected" data-kind="'+kind+'" data-id="'+esc(a.id)+'">Reddet</button></div>':'';
+ return '<article class="approval-card"><strong>'+esc(a.athlete_name)+'</strong><div class="muted">'+esc(club?.club_name||a.club_name||'—')+'</div><div>'+esc(club?.coach_name||a.coach_name||'')+' '+esc(club?.phone||a.contact_phone||'')+'</div><div class="muted">'+esc(a.birth_date||'')+' · '+esc(a.age_group)+' / '+esc(a.gender)+' / '+esc(a.weight)+' kg</div><div class="approval-status '+esc(status)+'">Durum: '+esc(approvalLabels[status]||status)+'</div>'+controls+'</article>';
+}
+async function loadApprovals(){
+ if(!managerAuthorized||!managerClient)return;
+ const version=++approvalVersion;
+ $('approvalCounts').textContent='Başvurular yükleniyor…';
+ try{
+  const [g,a,c]=await Promise.all([
+   managerClient.from('guest_athlete_applications').select('*').order('created_at',{ascending:false}),
+   managerClient.from('athlete_applications').select('*').order('created_at',{ascending:false}),
+   managerClient.from('club_profiles').select('*').order('created_at',{ascending:false})
+  ]);
+  if(!managerAuthorized||version!==approvalVersion)return;
+  if(g.error)throw g.error;
+  const guest=g.data||[];
+  $('approvalCounts').textContent='Şifresiz başvuru: '+guest.length+' · Bekleyen: '+guest.filter(x=>x.status==='pending').length+' · Onaylanan: '+guest.filter(x=>x.status==='approved').length;
+  $('approvalGuestList').innerHTML=guest.map(x=>approvalCard(x,null,'guest')).join('')||'<p class="muted">Henüz başvuru yok.</p>';
+  if(a.error||c.error){$('approvalLegacyList').textContent='Önceki hesaplı başvurular yüklenemedi: '+(a.error||c.error).message;}
+  else{
+   const clubs=c.data||[],byId=Object.fromEntries(clubs.map(x=>[x.user_id,x]));
+   $('approvalLegacyList').innerHTML='<h3>Kulüp hesapları</h3>'+clubs.map(x=>'<article class="approval-card"><strong>'+esc(x.club_name)+'</strong><div>'+esc(x.coach_name||'')+' · '+(x.role==='admin'?'Yönetici':x.active?'Aktif':'Bekliyor')+'</div>'+(x.role==='admin'?'':'<button data-club-id="'+esc(x.user_id)+'" data-active="'+(!x.active)+'">'+(x.active?'Pasifleştir':'Onayla')+'</button>')+'</article>').join('')+'<h3>Hesaplı sporcu başvuruları</h3>'+((a.data||[]).map(x=>approvalCard(x,byId[x.user_id],'legacy')).join('')||'<p class="muted">Başvuru yok.</p>');
+  }
+  for(const el of [$('approvalGuestList'),$('approvalLegacyList')]){
+   el.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>reviewApproval(b.dataset.kind,b.dataset.id,b.dataset.review,b));
+   el.querySelectorAll('[data-club-id]').forEach(b=>b.onclick=()=>reviewClubAccount(b.dataset.clubId,b.dataset.active==='true',b));
+  }
+ }catch(e){if(managerAuthorized&&version===approvalVersion){$('approvalCounts').textContent='Başvurular yüklenemedi.';approvalNotice(e.message||String(e),false)}}
+}
+async function reviewApproval(kind,id,status,button){
+ if(!managerAuthorized||approvalBusy||!['approved','rejected'].includes(status)||!['guest','legacy'].includes(kind))return;
+ if(!confirm(status==='approved'?'Bu sporcu başvurusu onaylansın mı?':'Bu sporcu başvurusu reddedilsin mi?'))return;
+ approvalBusy=true;button.disabled=true;
+ try{
+  const table=kind==='guest'?'guest_athlete_applications':'athlete_applications';
+  const payload=kind==='guest'?{status}:{status,updated_at:new Date().toISOString()};
+  const {data,error}=await managerClient.from(table).update(payload).eq('id',id).eq('status','pending').select('id,status');
+  if(error)throw error;
+  if(!data?.some(x=>x.status===status)){
+   const check=await managerClient.from(table).select('id,status').eq('id',id).maybeSingle();
+   if(check.error)throw check.error;if(check.data?.status!==status)throw Error('Veritabanı değişikliği kaydetmedi. Yönetici iznini kontrol edin.');
+  }
+  await loadApprovals();if(managerAuthorized)approvalNotice(status==='approved'?'✓ Başvuru onaylandı. Onaylı sporcuları aktar butonuyla kaydedebilirsiniz.':'✓ Başvuru reddedildi.');
+ }catch(e){if(managerAuthorized)approvalNotice('İşlem kaydedilemedi: '+(e.message||e),false)}
+ finally{approvalBusy=false;button.disabled=false}
+}
+async function reviewClubAccount(id,active,button){
+ if(!managerAuthorized||approvalBusy)return;if(!confirm('Kulüp hesabının durumu değiştirilsin mi?'))return;
+ approvalBusy=true;button.disabled=true;
+ try{
+  const {data,error}=await managerClient.from('club_profiles').update({active}).eq('user_id',id).neq('role','admin').select('user_id,active');
+  if(error)throw error;if(!data?.some(x=>x.active===active))throw Error('Kulüp durumu güncellenemedi.');
+  await loadApprovals();if(managerAuthorized)approvalNotice('✓ Kulüp hesabı güncellendi.');
+ }catch(e){if(managerAuthorized)approvalNotice(e.message||String(e),false)}
+ finally{approvalBusy=false;button.disabled=false}
+}
+managerBoot();
 </script></body></html>
