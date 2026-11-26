@@ -3,7 +3,7 @@
 <title>Online Kulüp Başvurusu | İstanbul Kulüpler</title>
 <style>
 :root{font-family:system-ui,Arial,sans-serif;color:#162747;background:#f1f5fa}*{box-sizing:border-box}body{margin:0}header{background:#10254c;color:white;padding:22px 16px}header div,main{max-width:980px;margin:auto}h1{font-size:23px;margin:0}header a{color:white}main{padding:16px}.card{background:white;border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 2px 12px #20385410}h2{font-size:20px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}input,select{width:100%;font:inherit;padding:12px;border:1px solid #ccd6e4;border-radius:9px}button{cursor:pointer;border:0;border-radius:9px;background:#142d58;color:white;padding:12px 15px;font-size:15px;font-weight:bold;margin:5px 5px 5px 0}.secondary{background:#e5ecf6;color:#142d58}.danger{background:#b91c35}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.hidden{display:none!important}.hint{color:#5d6b80;font-size:13px}.msg{white-space:pre-wrap;border-radius:8px;padding:12px;background:#e8f0fa}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:630px}td,th{text-align:left;padding:10px;border-bottom:1px solid #e4e8ef;font-size:14px}th{background:#f0f3f9}.pill{border-radius:20px;padding:3px 9px;background:#edf1f5;font-size:12px;display:inline-block}
-#auth{display:none!important}body:not(.manager-view) #account,body:not(.manager-view) #apply,body:not(.manager-view) #applications,body:not(.manager-view) #admin{display:none!important}body.manager-view #guest{display:none!important}body.manager-view #auth:not(.hidden){display:block!important}@media(max-width:650px){#guestTable table,#guestTable tbody,#guestTable tr,#guestTable td{display:block;width:100%;min-width:0}#guestTable tr:first-child{display:none}#guestTable tr{border:1px solid #dce4ef;border-radius:12px;padding:8px;margin:10px 0}#guestTable td{border:0;padding:5px 7px;overflow-wrap:anywhere}#guestTable td:nth-child(1){font-weight:700}#guestTable td:nth-child(3){font-weight:700;font-size:16px}#guestTable td:nth-child(5){font-weight:700}#guestTable td:nth-child(6) button{min-width:100px}#guestTable td:nth-child(4)::before{content:"Kategori: "}#guestTable td:nth-child(5)::before{content:"Durum: "}}</style></head><body>
+</style><script>if(location.hash==="#yonetici"){location.replace("admin.html#basvurular")}</script></head><body>
 <header><div><h1>🥋 Online Kulüp ve Sporcu Başvurusu</h1><p>İstanbul Kulüpler Turnuva Sistemi</p></div></header>
 <main>
 <div class="card"><strong>Durum:</strong> <span id="state">Bağlantı kontrol ediliyor…</span><p id="message" class="hint"></p></div>
@@ -26,21 +26,6 @@
 <button type="submit" id="guestSubmit">Başvuruyu yöneticiye gönder</button><p id="guestResult" role="status" aria-live="polite" style="display:none;padding:15px;border-radius:10px;font-weight:700;margin:12px 0"></p>
 </form>
 </section>
-<section id="auth" class="card hidden"><details><summary style="font-weight:700;cursor:pointer">Yalnız yönetici girişi</summary>
-<p class="hint">Yönetici hesabınızı e-posta ve şifrenizle açın. Kulüpler için giriş gerekmiyor.</p>
-<div class="grid"><div><label for="email">Yönetici e-posta</label><input type="email" id="email" autocomplete="email"></div><div><label for="password">Şifre</label><input type="password" id="password" autocomplete="current-password"></div></div>
-<button id="login">Yönetici girişi</button></details></section>
-<section id="account" class="card hidden"><h2>Hesap ve kulüp</h2><div id="who"></div><div class="grid"><div><label>Kulüp adı</label><input id="club"></div><div><label>Antrenör</label><input id="coach"></div><div><label>Telefon</label><input id="phone" type="tel"></div></div><button id="profileSave">İlk kulüp kaydını oluştur</button><button id="logout" class="secondary">Çıkış yap</button><p class="hint">Kulüp adı değişikliği gerekiyorsa yöneticinizle görüşün.</p></section>
-<section id="apply" class="card hidden"><h2>Sporcu başvurusu</h2><form id="athleteForm"><div class="grid">
-<div><label>Sporcu adı soyadı</label><input id="athleteName" required></div>
-<div><label>Doğum tarihi</label><input id="birth" type="date" required></div>
-<div><label>Cinsiyet</label><select id="gender"><option>Erkek</option><option>Bayan</option></select></div>
-<div><label>Yaş grubu</label><select id="age"><option>Alt Minik</option><option>Minik</option><option>Yıldız</option><option>Genç</option><option>Ümit</option><option>Büyük</option></select></div>
-<div><label>Kilo kategorisi</label><select id="weight" required></select><input id="weightOther" class="hidden" maxlength="10" placeholder="Kilo kategorisini yazın (ör. +63)" aria-label="Diğer kilo kategorisi"></div>
-<div><label>Lisans numarası (isteğe bağlı)</label><input id="license"></div>
-</div><button type="submit">Başvuruyu yöneticiye gönder</button></form></section>
-<section id="applications" class="card hidden"><h2>Başvurular</h2><button id="refresh" class="secondary">Yenile</button><div class="scroll" id="table"></div></section>
-<section id="admin" class="card hidden"><h2>Yönetici onay paneli</h2><p class="hint">Kulüp hesabını etkinleştirin; sporcu başvurusunu onaylayın veya reddedin.</p><h3>Kulüpler</h3><div class="scroll" id="clubsTable"></div><h3>Hesaplı sporcu başvuruları</h3><div class="scroll" id="adminTable"></div><h3>Şifresiz kulüp başvuruları</h3><button id="refreshGuest" class="secondary">Misafir başvurularını yenile</button><p id="guestAdminNotice" role="status" aria-live="polite" style="display:none;padding:12px;border-radius:8px;font-weight:700"></p><div class="scroll" id="guestTable"></div></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -76,7 +61,7 @@ function setWeightOptions(ageId,genderId,weightId,otherId){
  };
 }
 function initializeWeightPickers(){
- for(const [age,gender,weight,other] of [['guestAge','guestGender','guestWeight','guestWeightOther'],['age','gender','weight','weightOther']]){
+ for(const [age,gender,weight,other] of [['guestAge','guestGender','guestWeight','guestWeightOther']]){
   const update=()=>setWeightOptions(age,gender,weight,other);
   $(age).addEventListener('change',update);
   $(gender).addEventListener('change',update);
@@ -88,7 +73,7 @@ function selectedWeight(selectId,otherId){
  return value==='other'?$(otherId).value.trim():value;
 }
 
-let api,session=null,profile=null;
+let api;
 function notify(t){$('message').textContent=t||''}
 function guestNotice(t,ok){const el=$('guestResult');el.style.display='block';el.style.background=ok?'#dcfce7':'#fee2e2';el.style.color=ok?'#14532d':'#991b1b';el.textContent=t;el.scrollIntoView({behavior:'smooth',block:'center'});notify(t)}
 function state(t){$('state').textContent=t}
@@ -97,31 +82,9 @@ function error(err){console.error(err);notify('İşlem başarısız: '+(err?.mes
 function btn(text,action){return '<button data-action="'+action+'">'+text+'</button>'}
 async function boot(){
  if(!window.supabase){state('Bağlantı kütüphanesi yüklenemedi');notify('İnternet bağlantınızı kontrol edin.');return}
- api=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
- const {data,error:err}=await api.auth.getSession();if(err)error(err);session=data?.session||null;
- api.auth.onAuthStateChange((_event,s)=>{session=s;setTimeout(()=>load().catch(error),0)});
- await load();
+ api=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storageKey:'istanbulGuestPublic',autoRefreshToken:false,persistSession:false,detectSessionInUrl:false}});
+ state('Şifresiz başvuru formu hazır');
 }
-async function load(){
- const managerView=location.hash==='#yonetici';document.body.classList.toggle('manager-view',managerView);
- show('auth',managerView&&!session);show('guest',!managerView);show('account',managerView&&!!session);show('apply',false);show('applications',false);show('admin',false);
- if(!managerView){state('Şifresiz başvuru formu hazır');return}
- if(!session){profile=null;state('Yönetici girişi gerekli');return}
- state('Hesap açık');$('who').textContent='E-posta: '+session.user.email;
- const {data, error:err}=await api.from('club_profiles').select('*').eq('user_id',session.user.id).maybeSingle();
- if(err){error(err);state('Veritabanı kurulumu gerekli');return}
- profile=data;
- $('club').value=data?.club_name||'';$('coach').value=data?.coach_name||'';$('phone').value=data?.phone||'';
- $('profileSave').classList.toggle('hidden',!!data);['club','coach','phone'].forEach(k=>$(k).disabled=!!data);
- if(!profile){state('Kulüp bilgilerini kaydedin');return}
- if(!profile.active&&profile.role!=='admin'){state('Kulüp yöneticinin onayını bekliyor');return}
- state(profile.role==='admin'?'Yönetici hesabı aktif':'Kulüp hesabı aktif');
- show('apply',managerView);show('applications',managerView);show('admin',managerView&&profile.role==='admin');if(profile.role==='admin'&&!document.getElementById('adminDashboardLink')){$('admin').insertAdjacentHTML('afterbegin','<p><a id="adminDashboardLink" href="admin.html" style="display:inline-block;background:#10254c;color:white;padding:14px;border-radius:9px;font-weight:bold">Yönetici Turnuva Panelini Aç</a></p>')}
- if(managerView)await list();
- if(managerView&&profile.role==='admin')await listGuest();
-}
-$('login').onclick=async()=>{const {error:err}=await api.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(err)error(err);else notify('Giriş yapıldı')};
-// Kulüpler için hesap açma zorunluluğu kaldırıldı; yönetici girişi korunuyor.
 $('guestForm').onsubmit=async ev=>{
  ev.preventDefault();
  const form=ev.currentTarget,button=$('guestSubmit');$('guestResult').style.display='none';
@@ -145,74 +108,6 @@ $('guestForm').onsubmit=async ev=>{
   guestNotice('BAŞVURU KAYDEDİLEMEDİ: '+(err?.message||'Bağlantı hatası. İnterneti kontrol edin ve tekrar deneyin.'),false);
  }finally{button.disabled=false;button.textContent='Başvuruyu yöneticiye gönder'}
 };
-$('logout').onclick=async()=>{await api.auth.signOut();profile=null;session=null;await load()};
-$('profileSave').onclick=async()=>{
- if(!session)return;const name=$('club').value.trim(),coach=$('coach').value.trim();
- if(!name||!coach){notify('Kulüp ve antrenör adını doldurun.');return}
- const {error:err}=await api.from('club_profiles').insert({user_id:session.user.id,club_name:name,coach_name:coach,phone:$('phone').value.trim(),role:'club',active:false});
- if(err)error(err);else{notify('Kulüp başvurusu alındı; yönetici onayı bekleniyor.');await load()}
-};
-$('athleteForm').onsubmit=async ev=>{
- ev.preventDefault();if(!session||!profile?.active){notify('Kulübünüz henüz etkin değil.');return}
- const weight=selectedWeight('weight','weightOther');if(!/^\+?\d+(?:\.\d+)?$/.test(weight)){notify('Geçerli kilo yazın: 30 veya +57');return}
- const {error:err}=await api.from('athlete_applications').insert({user_id:session.user.id,athlete_name:$('athleteName').value.trim(),birth_date:$('birth').value,gender:$('gender').value,age_group:$('age').value,weight,license:$('license').value.trim(),status:'pending'});
- if(err)error(err);else{notify('Sporcu başvurusu yönetici onayına gönderildi.');ev.target.reset();await list()}
-};
-$('refresh').onclick=list;
-async function list(){
- if(!session||!profile)return;
- let q=api.from('athlete_applications').select('*').order('created_at',{ascending:false});
- const {data:apps,error:err}=await q;
- if(err){error(err);return}
- const my=profile.role==='admin'?apps:apps.filter(a=>a.user_id===session.user.id);
- const st={pending:'Beklemede',approved:'Onaylandı',rejected:'Reddedildi'};
- $('table').innerHTML='<table><thead><tr><th>Sporcu</th><th>Kategori</th><th>Durum</th><th>İşlem</th></tr></thead><tbody>'+my.map(a=>'<tr><td>'+e(a.athlete_name)+'</td><td>'+e(a.age_group+' / '+a.gender+' / '+a.weight+' kg')+'</td><td><span class="pill">'+e(st[a.status]||a.status)+'</span></td><td>'+(a.user_id===session.user.id&&a.status==='pending'?'<button class="danger" data-delete="'+e(a.id)+'">Sil</button>':'')+'</td></tr>').join('')+'</tbody></table>';
- $('table').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>del(b.dataset.delete));
- if(profile.role!=='admin')return;
- const p=await api.from('club_profiles').select('*').order('created_at',{ascending:false});
- if(p.error){error(p.error);return}
- const clubs=p.data||[],clubMap=Object.fromEntries(clubs.map(c=>[c.user_id,c.club_name]));
- $('clubsTable').innerHTML='<table><tr><th>Kulüp</th><th>Antrenör</th><th>Durum</th><th>İşlem</th></tr>'+clubs.map(c=>'<tr><td>'+e(c.club_name)+'</td><td>'+e(c.coach_name)+'</td><td>'+e(c.active?'Aktif':'Bekliyor')+'</td><td>'+(c.role==='admin'?'Yönetici':'<button data-club="'+e(c.user_id)+'" data-active="'+!c.active+'">'+(c.active?'Pasifleştir':'Onayla')+'</button>')+'</td></tr>').join('')+'</table>';
- $('clubsTable').querySelectorAll('[data-club]').forEach(b=>b.onclick=()=>approveClub(b.dataset.club,b.dataset.active==='true'));
- $('adminTable').innerHTML='<table><tr><th>Sporcu</th><th>Kulüp</th><th>Kategori</th><th>Durum</th><th>İşlem</th></tr>'+apps.map(a=>'<tr><td>'+e(a.athlete_name)+'</td><td>'+e(clubMap[a.user_id]||'—')+'</td><td>'+e(a.age_group+' / '+a.gender+' / '+a.weight+' kg')+'</td><td>'+e(st[a.status])+'</td><td>'+(a.status==='pending'?'<button data-id="'+e(a.id)+'" data-status="approved">Onayla</button><button class="danger" data-id="'+e(a.id)+'" data-status="rejected">Reddet</button>':'—')+'</td></tr>').join('')+'</table>';
- $('adminTable').querySelectorAll('[data-status]').forEach(b=>b.onclick=()=>approveAthlete(b.dataset.id,b.dataset.status));
-}
-$('refreshGuest').onclick=listGuest;
-async function listGuest(){
- if(!session||profile?.role!=='admin')return;
- const {data,error:err}=await api.from('guest_athlete_applications').select('*').order('created_at',{ascending:false}).limit(500);
- if(err){error(err);$('guestTable').textContent='Başvurular yüklenemedi. '+err.message;return}
- const statuses={pending:'Beklemede',approved:'Onaylandı',rejected:'Reddedildi'};
- $('guestTable').innerHTML='<table><tr><th>Kulüp</th><th>Antrenör / Telefon</th><th>Sporcu</th><th>Kategori</th><th>Durum</th><th>İşlem</th></tr>'+
- (data||[]).map(a=>'<tr><td>'+e(a.club_name)+'</td><td>'+e(a.coach_name)+' / '+e(a.contact_phone)+'</td><td>'+e(a.athlete_name)+'</td><td>'+e(a.age_group+' / '+a.gender+' / '+a.weight+' kg')+'</td><td>'+e(statuses[a.status]||a.status)+'</td><td>'+(a.status==='pending'?'<button data-guest-id="'+e(a.id)+'" data-guest-status="approved">Onayla</button><button class="danger" data-guest-id="'+e(a.id)+'" data-guest-status="rejected">Reddet</button>':'—')+'</td></tr>').join('')+'</table>';
- $('guestTable').querySelectorAll('[data-guest-status]').forEach(b=>b.onclick=()=>reviewGuest(b.dataset.guestId,b.dataset.guestStatus));
-}
-function guestAdminNotice(message,ok){
- const el=$('guestAdminNotice');el.style.display='block';el.style.background=ok?'#dcfce7':'#fee2e2';el.style.color=ok?'#14532d':'#991b1b';el.textContent=message;el.scrollIntoView({behavior:'smooth',block:'center'});
-}
-async function reviewGuest(id,status){
- if(!session||profile?.role!=='admin')return;
- if(!['approved','rejected'].includes(status))return;
- if(!confirm(status==='approved'?'Kulüp bilgilerini kontrol ettiniz mi? Başvuru onaylansın mı?':'Başvuru reddedilsin mi?'))return;
- const buttons=Array.from($('guestTable').querySelectorAll('[data-guest-id]')).filter(b=>b.dataset.guestId===id);
- buttons.forEach(b=>b.disabled=true);
- try{
-  const {data,error:err}=await api.from('guest_athlete_applications').update({status}).eq('id',id).eq('status','pending').select('id,status');
-  if(err)throw err;
-  if(!data?.length){
-   const check=await api.from('guest_athlete_applications').select('id,status').eq('id',id).maybeSingle();
-   if(check.error)throw check.error;
-   if(check.data?.status!==status)throw Error('Veritabanı değişikliği kaydetmedi. Yönetici UPDATE izni (RLS) kontrol edilmeli.');
-  }else if(data[0].status!==status)throw Error('Başvuru durumu değişmedi.');
-  await listGuest();
-  guestAdminNotice(status==='approved'?'✓ Başvuru onaylandı. Turnuva panelinden onaylı sporcuları aktarabilirsiniz.':'✓ Başvuru reddedildi.',true);
- }catch(err){console.error(err);guestAdminNotice('İşlem kaydedilemedi: '+(err?.message||String(err)),false)}
- finally{buttons.forEach(b=>b.disabled=false)}
-}
-async function del(id){if(!confirm('Bekleyen sporcu başvurusunu silmek istiyor musunuz?'))return;const {error:err}=await api.from('athlete_applications').delete().eq('id',id).eq('status','pending');if(err)error(err);else await list()}
-async function approveClub(id,active){const {error:err}=await api.from('club_profiles').update({active}).eq('user_id',id);if(err)error(err);else await list()}
-async function approveAthlete(id,status){const {error:err}=await api.from('athlete_applications').update({status,updated_at:new Date().toISOString()}).eq('id',id);if(err)error(err);else await list()}
 initializeWeightPickers();
-window.addEventListener('hashchange',()=>{if(api)load().catch(error)});
 boot().catch(error);
 </script></body></html>
