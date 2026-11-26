@@ -527,7 +527,7 @@ const approvalLabels={pending:'Beklemede',approved:'Onaylandı',rejected:'Redded
 function approvalCard(a,club,kind){
  const status=String(a.status||'pending');
  const controls=status==='pending'?'<div class="actions"><button data-review="approved" data-kind="'+kind+'" data-id="'+esc(a.id)+'">Onayla</button><button class="danger" data-review="rejected" data-kind="'+kind+'" data-id="'+esc(a.id)+'">Reddet</button></div>':'';
- return '<article class="approval-card"><strong>'+esc(a.athlete_name)+'</strong><div class="muted">'+esc(club?.club_name||a.club_name||'—')+'</div><div>'+esc(club?.coach_name||a.coach_name||'')+' '+esc(club?.phone||a.contact_phone||'')+'</div><div class="muted">'+esc(a.birth_date||'')+' · '+esc(a.age_group)+' / '+esc(a.gender)+' / '+esc(a.weight)+' kg</div><div class="approval-status '+esc(status)+'">Durum: '+esc(approvalLabels[status]||status)+'</div>'+controls+'</article>';
+ return '<article class="approval-card"><strong>'+esc(a.athlete_name)+'</strong><div class="muted">'+esc(club?.club_name||a.club_name||'—')+'</div><div>'+esc(club?.coach_name||a.coach_name||'')+' '+esc(club?.phone||a.contact_phone||'')+'</div><div class="muted">'+esc(a.birth_date||'')+' · '+esc(a.age_group)+' / '+esc(a.gender)+' / '+esc(a.weight)+' kg</div><div class="approval-status '+esc(status)+'">Durum: '+esc(approvalLabels[status]||status)+'</div>'+controls+'<div class="actions"><button type="button" class="danger" data-delete-approval="'+esc(a.id)+'" data-kind="'+kind+'" data-name="'+esc(a.athlete_name)+'" data-birth="'+esc(a.birth_date||'')+'" data-club="'+esc(club?.club_name||a.club_name||'')+'">Başvuruyu sil</button></div></article>';
 }
 async function loadApprovals(){
  if(!managerAuthorized||!managerClient)return;
@@ -551,6 +551,7 @@ async function loadApprovals(){
   }
   for(const el of [$('approvalGuestList'),$('approvalLegacyList')]){
    el.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>reviewApproval(b.dataset.kind,b.dataset.id,b.dataset.review,b));
+   el.querySelectorAll('[data-delete-approval]').forEach(b=>b.onclick=()=>deleteApproval(b));
    el.querySelectorAll('[data-club-id]').forEach(b=>b.onclick=()=>reviewClubAccount(b.dataset.clubId,b.dataset.active==='true',b));
   }
  }catch(e){if(managerAuthorized&&version===approvalVersion){$('approvalCounts').textContent='Başvurular yüklenemedi.';approvalNotice(e.message||String(e),false)}}
@@ -570,6 +571,36 @@ async function reviewApproval(kind,id,status,button){
   }
   await loadApprovals();if(managerAuthorized)approvalNotice(status==='approved'?'✓ Başvuru onaylandı. Onaylı sporcuları aktar butonuyla kaydedebilirsiniz.':'✓ Başvuru reddedildi.');
  }catch(e){if(managerAuthorized)approvalNotice('İşlem kaydedilemedi: '+(e.message||e),false)}
+ finally{approvalBusy=false;button.disabled=false}
+}
+function planApprovalRemoval(source,localId){
+ const draws=source.draws.filter(d=>d.ids.includes(localId));
+ if(draws.some(hasDrawResults))throw Error('Bu kayıt sonuç girilmiş bir kurada yer alıyor. Önce ilgili kuranın sonuçlarını temizleyin.');
+ return {...source,athletes:source.athletes.filter(a=>a.id!==localId),draws:source.draws.flatMap(d=>{if(!d.ids.includes(localId))return [d];const ids=d.ids.filter(x=>x!==localId);return ids.length?[{...d,ids,semi:{},final:null}]:[]}),excludedDuplicateIds:(source.excludedDuplicateIds||[]).filter(x=>x!==localId)};
+}
+async function deleteApproval(button){
+ if(!managerAuthorized||approvalBusy)return;
+ const {kind,deleteApproval:id,name,birth,club}=button.dataset;
+ if(!id||!['guest','legacy'].includes(kind))return;
+ const table=kind==='guest'?'guest_athlete_applications':'athlete_applications';
+ const localId=(kind==='guest'?'guest-':'online-')+id;
+ let next;
+ try{next=planApprovalRemoval(db,localId)}catch(e){approvalNotice(e.message,false);return}
+ if(!confirm(name+' — '+birth+' — '+club+' başvurusu kalıcı olarak silinsin mi? Yalnız bu kayıt ve varsa başlamamış kura katılımı kaldırılır.'))return;
+ approvalBusy=true;button.disabled=true;let remoteDeleted=false;
+ try{
+  localStorage.setItem('istanbulKulupV1_beforeApprovalDelete',JSON.stringify(db));
+  const {data,error}=await managerClient.from(table).delete().eq('id',id).select('id');
+  if(error)throw error;
+  if(!data?.some(x=>String(x.id)===id))throw Error('Silme doğrulanamadı. Veritabanında yönetici DELETE izni gerekebilir.');
+  remoteDeleted=true;
+  if(managerAuthorized){
+   next=planApprovalRemoval(db,localId);
+   const old=db;db=next;try{save()}catch(e){db=old;throw e}
+   if(editingAthleteId===localId)editingAthleteId=null;
+   render();await loadApprovals();approvalNotice('✓ '+name+' — '+birth+' başvurusu silindi. Diğer kayıtlar korundu.');
+  }
+ }catch(e){if(managerAuthorized)approvalNotice((remoteDeleted?'Başvuru veritabanından silindi, ancak yerel temizleme tamamlanamadı: ':'Silme işlemi tamamlanamadı: ')+(e.message||e),false)}
  finally{approvalBusy=false;button.disabled=false}
 }
 async function reviewClubAccount(id,active,button){
