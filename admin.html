@@ -522,6 +522,7 @@ $('managerLogout').onclick=async()=>{
 };
 function approvalNotice(message,ok=true){
  const el=$('approvalNotice');el.hidden=false;el.textContent=message;el.style.background=ok?'#dcfce7':'#fee2e2';el.style.color=ok?'#14532d':'#991b1b';
+ el.scrollIntoView({behavior:'smooth',block:'center'});
 }
 const approvalLabels={pending:'Beklemede',approved:'Onaylandı',rejected:'Reddedildi'};
 function approvalCard(a,club,kind){
