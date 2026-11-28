@@ -9,7 +9,7 @@
 <div class="card"><strong>Durum:</strong> <span id="state">Bağlantı kontrol ediliyor…</span><p id="message" class="hint"></p></div>
 <section id="guest" class="card">
 <h2>Şifresiz sporcu başvurusu</h2>
-<p class="hint">Kulüp yetkilileri üye olmadan doğrudan form doldurabilir. Başvurular yönetici onayına gönderilir. Kulüp bilgileri henüz doğrulanmamış sayılır.</p>
+<p class="hint">Kulüp yetkilileri üye olmadan doğrudan form doldurabilir. Başvurular yönetici onayına gönderilir. Kulüp bilgileri henüz doğrulanmamış sayılır. Aynı sporcuyu bu sayfadan tekrar gönderirseniz mükerrer başvuru uyarısı gösterilir.</p>
 <form id="guestForm">
 <div class="grid">
 <div><label for="guestClub">Kulüp adı</label><input id="guestClub" required maxlength="150"></div>
@@ -88,6 +88,9 @@ function selectedWeight(selectId,otherId){
  return value==='other'?$(otherId).value.trim():value;
 }
 
+// Yalnız bu sayfadan başarıyla gönderilen kayıtları hatırla; diğer kulüplerin bilgilerini sorgulama.
+const sentAthletes=new Set();
+function submissionPersonKey(p){const norm=s=>String(s||'').normalize('NFC').trim().replace(/\s+/g,' ').toLocaleLowerCase('tr');return JSON.stringify([norm(p.club_name),norm(p.athlete_name),p.birth_date,p.gender])}
 let api;
 function notify(t){$('message').textContent=t||''}
 function guestNotice(t,ok){const el=$('guestResult');el.style.display='block';el.style.background=ok?'#dcfce7':'#fee2e2';el.style.color=ok?'#14532d':'#991b1b';el.textContent=t;el.scrollIntoView({behavior:'smooth',block:'center'});notify(t)}
@@ -113,10 +116,13 @@ $('guestForm').onsubmit=async ev=>{
  const payload={club_name:$('guestClub').value.trim(),coach_name:$('guestCoach').value.trim(),contact_phone:$('guestPhone').value.trim(),athlete_name:$('guestName').value.trim(),birth_date:birth,gender:$('guestGender').value,age_group:$('guestAge').value,weight:weight.replace(',','.'),license:$('guestLicense').value.trim()};
  if(!payload.club_name||!payload.coach_name||!payload.contact_phone||!payload.athlete_name){guestNotice('Lütfen zorunlu alanları doldurun.',false);return}
  if(payload.birth_date>new Date().toISOString().slice(0,10)){guestNotice('Doğum tarihi gelecekte olamaz.',false);return}
+ const personKey=submissionPersonKey(payload);
+ if(sentAthletes.has(personKey)&&!confirm('Bu sporcu bu sayfadan daha önce gönderildi. Bilgileri düzeltmek amacıyla yeniden başvuru göndermek istiyor musunuz?')){guestNotice('Tekrarlanan başvuru gönderilmedi. Önceki başvuru korunuyor.',false);return}
  button.disabled=true;button.textContent='Başvuru gönderiliyor…';
  try{
   const {error:err}=await api.from('guest_athlete_applications').insert(payload);
   if(err)throw err;
+  sentAthletes.add(personKey);
   $('guestName').value='';setBirthDate('guestBirth');$('guestLicense').value='';$('guestWeight').value='';$('guestWeightOther').value='';setWeightOptions('guestAge','guestGender','guestWeight','guestWeightOther');
   guestNotice('✓ BAŞVURU GÖNDERİLDİ. Sporcu yönetici onayı bekliyor. Kulüp bilgileri korundu; sıradaki sporcuyu ekleyebilirsiniz.',true);
  }catch(err){
