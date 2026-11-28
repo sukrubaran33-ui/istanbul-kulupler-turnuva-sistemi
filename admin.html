@@ -637,6 +637,7 @@ async function syncApprovedAthletes(){
  finally{button.disabled=false;button.textContent='✅ Onaylı sporcuları aktar'}
 }
 
+const sharedOnlineEntry=new URLSearchParams(location.search).get('from')==='online';
 let managerClient=null,managerAuthorized=false,managerSession=null;
 let approvalBusy=false,approvalVersion=0;
 let remoteDuplicateRecords=null;
@@ -657,6 +658,8 @@ async function authorizeManager(session){
  if(profile?.role!=='admin')throw Error('Bu hesabın yönetici yetkisi yok.');
  try{const raw=localStorage.getItem('istanbulKulupV1');if(raw&&!localStorage.getItem('istanbulKulupV1_protectedBaseline'))localStorage.setItem('istanbulKulupV1_protectedBaseline',raw)}catch(e){console.warn('Yerel koruma yedeği oluşturulamadı',e)}
  managerSession=session;managerAuthorized=true;document.body.classList.add('manager-ready');$('managerLogin').hidden=true;$('managerApp').hidden=false;
+ // Aynı bağlantı yönetici için de korunur. Yetki doğrulanmadan URL değişmez.
+ if(sharedOnlineEntry)history.replaceState(null,'','online.html'+location.hash);
  weightOptions();categoryEdit();show(location.hash==='#basvurular'?'approvals':'home');
  return true;
 }
@@ -682,7 +685,7 @@ $('managerLoginForm').onsubmit=async ev=>{
 $('managerLogout').onclick=async()=>{
  if(!managerClient)return;
  if(!confirm('Yönetici oturumu kapatılsın mı?'))return;
- const {error}=await managerClient.auth.signOut();if(error){alert('Çıkış yapılamadı: '+error.message);return}location.replace('admin.html');
+ const {error}=await managerClient.auth.signOut();if(error){alert('Çıkış yapılamadı: '+error.message);return}location.replace(sharedOnlineEntry?'online.html':'admin.html');
 };
 function approvalNotice(message,ok=true){
  const el=$('approvalNotice');el.hidden=false;el.textContent=message;el.style.background=ok?'#dcfce7':'#fee2e2';el.style.color=ok?'#14532d':'#991b1b';
