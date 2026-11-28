@@ -379,6 +379,9 @@ function downloadPDF(){
   const enc=new TextEncoder(), parts=[], offsets=[0];let total=0;
   function push(data){const b=typeof data==='string'?enc.encode(data):data;parts.push(b);total+=b.length}
   function obj(n,head,data,tail){offsets[n]=total;push(n+' 0 obj\n'+head);if(data)push(data);if(tail)push(tail);push('\nendobj\n')}
+  // PDF başlığı ve ikili veri işareti: tüm xref adresleri bu baytları içerir.
+  push('%PDF-1.4\n');
+  push(new Uint8Array([37,226,227,207,211,10]));
   const N=db.draws.length;
   obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
   const kids=db.draws.map((_,i)=>(3+i*3)+' 0 R').join(' ');
